@@ -345,32 +345,28 @@ def render_sidebar():
             if user:
                 adherence = db.get_adherence_rate(st.session_state.user_id, days=7)
                 color = "#22c55e" if adherence >= 80 else "#f59e0b" if adherence >= 60 else "#ef4444"
-                st.markdown(f"""
-                <div style="background:rgba(30,41,59,0.6);border:1px solid rgba(79,142,247,0.15);
-                     border-radius:12px;padding:14px;margin-bottom:16px">
-                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-                        <div style="background:linear-gradient(135deg,#4f8ef7,#a855f7);
-                             width:36px;height:36px;border-radius:50%;display:flex;
-                             align-items:center;justify-content:center;font-size:1.1rem">
-                            👤
-                        </div>
-                        <div>
-                            <div style="color:#e2e8f0;font-weight:600;font-size:0.9rem">{user['name']}</div>
-                            <div style="color:#94a3b8;font-size:0.75rem">
-                                {f"Age {user['age']}" if user.get('age') else ""} 
-                                {f"• {user['blood_group']}" if user.get('blood_group') else ""}
-                            </div>
-                        </div>
-                    </div>
-                    <div style="display:flex;justify-content:space-between;align-items:center">
-                        <span style="color:#94a3b8;font-size:0.75rem">7-day adherence</span>
-                        <span style="color:{color};font-weight:700;font-size:0.9rem">{adherence}%</span>
-                    </div>
-                    <div style="background:rgba(148,163,184,0.1);border-radius:99px;height:4px;margin-top:4px">
-                        <div style="background:{color};width:{adherence}%;height:100%;border-radius:99px"></div>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
+                age_text = f"Age {user['age']}" if user.get('age') else ""
+                bg_text = f"• {user['blood_group']}" if user.get('blood_group') else ""
+                profile_html = (
+                    f'<div style="background:rgba(30,41,59,0.6);border:1px solid rgba(79,142,247,0.15);'
+                    f'border-radius:12px;padding:14px;margin-bottom:16px">'
+                    f'<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'
+                    f'<div style="background:linear-gradient(135deg,#4f8ef7,#a855f7);width:36px;height:36px;'
+                    f'border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem">👤</div>'
+                    f'<div>'
+                    f'<div style="color:#e2e8f0;font-weight:600;font-size:0.9rem">{user["name"]}</div>'
+                    f'<div style="color:#94a3b8;font-size:0.75rem">{age_text} {bg_text}</div>'
+                    f'</div></div>'
+                    f'<div style="display:flex;justify-content:space-between;align-items:center">'
+                    f'<span style="color:#94a3b8;font-size:0.75rem">7-day adherence</span>'
+                    f'<span style="color:{color};font-weight:700;font-size:0.9rem">{adherence}%</span>'
+                    f'</div>'
+                    f'<div style="background:rgba(148,163,184,0.1);border-radius:99px;height:4px;margin-top:4px">'
+                    f'<div style="background:{color};width:{adherence}%;height:100%;border-radius:99px"></div>'
+                    f'</div></div>'
+                )
+                st.markdown(profile_html, unsafe_allow_html=True)
+
 
         # Navigation
         st.markdown("<p style='color:#94a3b8;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px'>Navigation</p>",
@@ -379,8 +375,10 @@ def render_sidebar():
         nav_items = {
             "📊 Dashboard": "dashboard",
             "💊 Medications": "medications",
-            "🤖 AI Chatbot": "chatbot",
+            "🍎 Nutrition & Diet": "nutrition",
             "📝 Health Log": "health_log",
+            "📈 Risk & Analytics": "analytics",
+            "🤖 AI Chatbot": "chatbot",
         }
 
         for label, page_key in nav_items.items():
@@ -454,12 +452,18 @@ def main():
     elif page == "medications":
         from pages.medications import show_medications
         show_medications()
-    elif page == "chatbot":
-        from pages.chatbot import show_chatbot
-        show_chatbot()
+    elif page == "nutrition":
+        from pages.nutrition import show_nutrition
+        show_nutrition()
     elif page == "health_log":
         from pages.health_log import show_health_log
         show_health_log()
+    elif page == "analytics":
+        from pages.analytics import show_analytics
+        show_analytics()
+    elif page == "chatbot":
+        from pages.chatbot import show_chatbot
+        show_chatbot()
     else:
         from pages.dashboard import show_dashboard
         show_dashboard()

@@ -110,8 +110,25 @@ def init_db():
         )
     """)
 
+    # ── Nutrition Logs ────────────────────────────────────────────────────
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS nutrition_logs (
+            id            INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id       INTEGER NOT NULL REFERENCES users(id),
+            meal_type     TEXT    NOT NULL,   -- breakfast, lunch, dinner, snack
+            calories      REAL    NOT NULL,
+            protein_g     REAL,
+            carbs_g       REAL,
+            fat_g         REAL,
+            food_items    TEXT,
+            recorded_at   TEXT    NOT NULL,
+            created_at    TEXT    DEFAULT (datetime('now'))
+        )
+    """)
+
     conn.commit()
     conn.close()
+
 
 
 # ────────────────────────────────────────────────────────────────────────────
@@ -357,3 +374,55 @@ def get_chat_history(user_id: int, limit: int = 20) -> list:
     """, (user_id, limit)).fetchall()
     conn.close()
     return [dict(r) for r in reversed(rows)]
+
+
+# ────────────────────────────────────────────────────────────────────────────
+# NUTRITION OPERATIONS
+# ────────────────────────────────────────────────────────────────────────────
+
+def log_nutrition(user_id: int, meal_type: str, calories: float,
+                  protein_g: float = None, carbs_g: float = None,
+                  fat_g: float = None, food_items: str = None,
+                  recorded_at: str = None) -> int:
+    recorded_at = recorded_at or datetime.now().strftime("%Y-%m-%d %H:%M")
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO nutrition_logs (user_id, meal_type, calories, protein_g, carbs_g, fat_g, food_items, recorded_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (user_id, meal_type, calories, protein_g, carbs_g, fat_g, food_items, recorded_at))
+    log_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+    return log_id
+
+
+def get_nutrition_logs(user_id: int, days: int = 7) -> list:
+    conn = get_connection()
+    rows = conn.execute("""
+        SELECT * FROM nutrition_logs
+        WHERE user_id = ?
+          AND recorded_at >= datetime('now', ? || ' days')
+        ORDER BY recorded_at DESC
+    """, (user_id, f"-{days}")).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def get_daily_macro_summary(user_id: int, days: int = 7) -> list:
+    conn = get_connection()
+    rows = conn.execute("""
+        SELECT date(recorded_at) as date,
+               SUM(calories) as total_calories,
+               SUM(protein_g) as total_protein,
+               SUM(carbs_g) as total_carbs,
+               SUM(fat_g) as total_fat
+        FROM nutrition_logs
+        WHERE user_id = ?
+          AND recorded_at >= datetime('now', ? || ' days')
+        GROUP BY date(recorded_at)
+        ORDER BY date DESC
+    """, (user_id, f"-{days}")).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
