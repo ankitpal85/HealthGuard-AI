@@ -45,16 +45,17 @@ def show_chatbot():
             st.session_state.agent_error = err
 
     if st.session_state.agent_error:
-        st.markdown(f"""
-        <div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);
-             border-radius:12px;padding:14px 18px;margin-bottom:16px">
-            <span style="color:#f59e0b;font-weight:600">⚙️ AI Mode Unavailable</span>
-            <p style="color:#94a3b8;font-size:0.85rem;margin:4px 0 0 0">
-                {st.session_state.agent_error}<br>
-                Running in rule-based mode. Configure your API key in the sidebar for full AI capability.
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
+        banner_html = (
+            '<div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);'
+            'border-radius:12px;padding:14px 18px;margin-bottom:16px;">'
+            '<span style="color:#f59e0b;font-weight:600">⚙️ Rule-Based Assistant Active</span>'
+            f'<div style="color:#94a3b8;font-size:0.85rem;margin-top:4px">'
+            f'{st.session_state.agent_error}<br>'
+            '💡 <em>Running in Rule-Based fallback mode. Enter a valid Google Gemini API Key in ⚙️ AI Settings (sidebar) to activate full AI reasoning.</em>'
+            '</div></div>'
+        )
+        st.markdown(banner_html, unsafe_allow_html=True)
+
 
     # ── Suggested questions ────────────────────────────────────────────────
     st.markdown("<p style='color:#94a3b8;font-size:0.85rem;margin-bottom:8px'>💡 Suggested questions:</p>",
@@ -134,16 +135,16 @@ def show_chatbot():
             )
 
     # ── Emergency info ────────────────────────────────────────────────────
-    st.markdown("""
-    <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);
-         border-radius:12px;padding:12px 16px;margin-top:16px;text-align:center">
-        <span style="color:#ef4444;font-weight:600">🚨 Medical Emergency?</span>
-        <span style="color:#94a3b8;font-size:0.85rem;margin-left:8px">
-            Call <strong style="color:#ef4444">112</strong> (India) immediately.
-            Do not rely on AI for emergency medical situations.
-        </span>
-    </div>
-    """, unsafe_allow_html=True)
+    emerg_html = (
+        '<div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);'
+        'border-radius:12px;padding:12px 16px;margin-top:16px;text-align:center">'
+        '<span style="color:#ef4444;font-weight:600">🚨 Medical Emergency?</span>'
+        '<span style="color:#94a3b8;font-size:0.85rem;margin-left:8px">'
+        'Call <strong style="color:#ef4444">112</strong> (India) immediately. '
+        'Do not rely on AI for emergency medical situations.</span></div>'
+    )
+    st.markdown(emerg_html, unsafe_allow_html=True)
+
 
 
 def _process_message(prompt: str, user_id: int):
