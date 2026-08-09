@@ -378,6 +378,9 @@ def render_sidebar():
             "🍎 Nutrition & Diet": "nutrition",
             "📝 Health Log": "health_log",
             "📈 Risk & Analytics": "analytics",
+            "🇮🇳 Indian Health & Ayurveda": "indian_health",
+            "👨‍👩‍👧 Family & Caregivers": "family_caregiver",
+            "👁️ Voice & Vision AI": "vision_voice",
             "🤖 AI Chatbot": "chatbot",
         }
 
@@ -403,22 +406,38 @@ def render_sidebar():
                                      placeholder="Enter your API key")
             if st.button("Save & Apply", use_container_width=True):
                 os.environ["LLM_PROVIDER"] = provider
+                clean_key = api_key.strip()
                 if provider == "gemini":
-                    os.environ["GOOGLE_API_KEY"] = api_key
+                    os.environ["GOOGLE_API_KEY"] = clean_key
                 else:
-                    os.environ["OPENAI_API_KEY"] = api_key
+                    os.environ["OPENAI_API_KEY"] = clean_key
+                
+                # Write to .env file
+                env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+                env_lines = [
+                    f"GOOGLE_API_KEY={clean_key if provider == 'gemini' else os.getenv('GOOGLE_API_KEY','')}\n",
+                    f"LLM_PROVIDER={provider}\n",
+                    f"OPENAI_API_KEY={clean_key if provider == 'openai' else os.getenv('OPENAI_API_KEY','')}\n",
+                    "APP_SECRET_KEY=change_this_to_a_random_secret\n",
+                    "DB_PATH=health_data.db\n"
+                ]
+                with open(env_path, "w") as f:
+                    f.writelines(env_lines)
+
                 # Reset agent so it re-initializes with new key
                 if "health_agent" in st.session_state:
                     del st.session_state["health_agent"]
                 if "agent_error" in st.session_state:
                     del st.session_state["agent_error"]
-                st.success("✅ Settings saved!")
+                st.success("✅ Settings saved & applied!")
 
-        # Switch user
+        # Logout / Switch user
         st.markdown("<hr style='border-color:rgba(79,142,247,0.1);margin:12px 0'>", unsafe_allow_html=True)
-        if st.button("🔄 Switch User", use_container_width=True):
+        if st.button("🔒 Logout / Sign Out", use_container_width=True):
+            st.session_state.authenticated = False
             st.session_state.user_id = None
             st.session_state.user_name = None
+            st.session_state.user_email = None
             st.session_state.page = "dashboard"
             if "chat_messages" in st.session_state:
                 del st.session_state["chat_messages"]
@@ -438,8 +457,10 @@ def render_sidebar():
 
 # ── Main router ────────────────────────────────────────────────────────────────
 def main():
-    if not st.session_state.user_id:
-        setup_user()
+    # Require Firebase / Local Authentication
+    if not st.session_state.get("authenticated") or not st.session_state.get("user_id"):
+        from pages.auth import show_auth_page
+        show_auth_page()
         return
 
     render_sidebar()
@@ -461,6 +482,15 @@ def main():
     elif page == "analytics":
         from pages.analytics import show_analytics
         show_analytics()
+    elif page == "indian_health":
+        from pages.indian_health import show_indian_health
+        show_indian_health()
+    elif page == "family_caregiver":
+        from pages.family_caregiver import show_family_caregiver
+        show_family_caregiver()
+    elif page == "vision_voice":
+        from pages.vision_voice import show_vision_voice
+        show_vision_voice()
     elif page == "chatbot":
         from pages.chatbot import show_chatbot
         show_chatbot()

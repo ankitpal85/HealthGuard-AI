@@ -257,18 +257,21 @@ def show_analytics():
 
     # ── Tab 4: Automated Reports ───────────────────────────────────────────
     with tab4:
-        st.markdown("<h3 style='color:#e2e8f0;font-size:1.1rem;margin-bottom:12px'>📄 Generate Health Report</h3>",
+        st.markdown("<h3 style='color:#e2e8f0;font-size:1.1rem;margin-bottom:12px'>📄 Generate Automated Clinical Report</h3>",
                     unsafe_allow_html=True)
-        st.markdown("<p style='color:#94a3b8;font-size:0.85rem'>Compile all your logged health metrics, medication logs, and clinical risk analysis into a unified medical report.</p>",
+        st.markdown("<p style='color:#94a3b8;font-size:0.85rem'>Compile all logged health metrics, medication adherence logs, disease risk scores, and clinical insights into downloadable HTML/Markdown reports.</p>",
                     unsafe_allow_html=True)
 
         report_days = st.slider("Report duration (days)", min_value=3, max_value=30, value=7, key="report_slider_days")
         
         if st.button("🚀 Compile Automated Clinical Report", use_container_width=True):
             with st.spinner("Generating clinical summary..."):
-                report_md = generate_automated_report(user_id, days=report_days)
+                from utils.report_generator import generate_comprehensive_report
+                report_data = generate_comprehensive_report(user_id)
                 
-                st.session_state.compiled_report = report_md
+                st.session_state.compiled_report = report_data["markdown"]
+                st.session_state.compiled_html = report_data["html"]
+                st.session_state.compiled_filename = report_data["filename"]
                 st.success("Report Compiled Successfully!")
 
         if "compiled_report" in st.session_state:
@@ -283,18 +286,27 @@ def show_analytics():
                     padding:24px;
                     max-height:450px;
                     overflow-y:auto;
-                    font-family:monospace;
                     margin-bottom:16px;
                 ">
                 """, unsafe_allow_html=True)
                 st.markdown(st.session_state.compiled_report)
                 st.markdown("</div>", unsafe_allow_html=True)
 
-            # Download Button
-            st.download_button(
-                label="📥 Download Clinical Report (.md)",
-                data=st.session_state.compiled_report,
-                file_name=f"health_report_{date.today().strftime('%Y%m%d')}.md",
-                mime="text/markdown",
-                use_container_width=True
-            )
+            c_dl1, c_dl2 = st.columns(2)
+            with c_dl1:
+                st.download_button(
+                    label="📥 Download Clinical Report (.md)",
+                    data=st.session_state.compiled_report,
+                    file_name=f"health_report_{date.today().strftime('%Y%m%d')}.md",
+                    mime="text/markdown",
+                    use_container_width=True
+                )
+            with c_dl2:
+                st.download_button(
+                    label="🌐 Download Web HTML Report (.html)",
+                    data=st.session_state.get("compiled_html", st.session_state.compiled_report),
+                    file_name=st.session_state.get("compiled_filename", "health_report.html"),
+                    mime="text/html",
+                    use_container_width=True
+                )
+
