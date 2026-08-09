@@ -10,18 +10,18 @@ from datetime import datetime
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from database import db_manager as db
-from agents.health_agent import build_health_agent, chat_with_agent, get_simple_response
+from agents.health_agent import build_health_agent, chat_with_agent, get_smart_health_response
 
 
 SUGGESTED_QUESTIONS = [
+    "Check 1mg price for Dolo 650",
+    "Find a Cardiologist in Mumbai on Practo",
+    "What are the benefits of Ashwagandha?",
+    "Check AQI for Delhi respiratory health",
     "What are today's medications?",
-    "What is normal blood pressure?",
-    "Explain the symptoms of diabetes",
-    "How much water should I drink daily?",
-    "What are the benefits of walking 10,000 steps?",
-    "Tell me about heart rate zones for exercise",
-    "What is the normal blood glucose range?",
-    "How does sleep affect health?",
+    "Explain symptoms of diabetes",
+    "Check Aspirin and Warfarin interaction",
+    "How much sleep do I need?",
 ]
 
 
@@ -38,23 +38,16 @@ def show_chatbot():
     """, unsafe_allow_html=True)
 
     # ── Initialize agent ───────────────────────────────────────────────────
-    if "health_agent" not in st.session_state:
-        with st.spinner("Initializing AI agent..."):
-            agent, err = build_health_agent(user_id)
-            st.session_state.health_agent = agent
-            st.session_state.agent_error = err
+    import importlib
+    from dotenv import load_dotenv
+    load_dotenv(override=True)
+    import agents.health_agent as ha_module
+    importlib.reload(ha_module)
 
-    if st.session_state.agent_error:
-        banner_html = (
-            '<div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);'
-            'border-radius:12px;padding:14px 18px;margin-bottom:16px;">'
-            '<span style="color:#f59e0b;font-weight:600">⚙️ Rule-Based Assistant Active</span>'
-            f'<div style="color:#94a3b8;font-size:0.85rem;margin-top:4px">'
-            f'{st.session_state.agent_error}<br>'
-            '💡 <em>Running in Rule-Based fallback mode. Enter a valid Google Gemini API Key in ⚙️ AI Settings (sidebar) to activate full AI reasoning.</em>'
-            '</div></div>'
-        )
-        st.markdown(banner_html, unsafe_allow_html=True)
+    if "health_agent" not in st.session_state or st.session_state.health_agent is None:
+        agent, err = ha_module.build_health_agent(user_id)
+        st.session_state.health_agent = agent
+        st.session_state.agent_error = None
 
 
     # ── Suggested questions ────────────────────────────────────────────────
@@ -69,31 +62,68 @@ def show_chatbot():
     st.markdown("<hr style='border-color:rgba(148,163,184,0.1);margin:16px 0'>", unsafe_allow_html=True)
 
     # ── Chat history display ───────────────────────────────────────────────
+    _ERROR_PREFIXES = (
+        "⚠️ Google Gemini",
+        "⚠️ OpenAI",
+        "Rule-based Fallback",
+        "🤖 HealthGuard AI\n\nI'm your health monitoring assistant",
+        "Configure your API key in ⚙️ Settings",
+        "Google returned 429",
+        "RESOURCE_EXHAUSTED",
+        "How to fix this in 30 seconds",
+    )
+
+    def _is_error_msg(content: str) -> bool:
+        return any(p in content for p in _ERROR_PREFIXES)
+
     if "chat_messages" not in st.session_state:
         st.session_state.chat_messages = []
 
-        # Load from DB
-        history = db.get_chat_history(user_id, limit=20)
-        if history:
-            st.session_state.chat_messages = history
-        else:
-            # Welcome message
-            welcome = (
-                "👋 **Hello! I'm HealthGuard AI**, your personal health monitoring assistant.\n\n"
-                "I can help you with:\n"
-                "• 💊 Medication reminders and tracking\n"
-                "• 📊 Health metrics and wellness data\n"
-                "• 🔍 Medical information from trusted sources\n"
-                "• 📈 Health insights and goal tracking\n\n"
-                "**⚠️ Disclaimer**: I provide health information for educational purposes only. "
-                "Always consult a qualified healthcare professional for medical advice.\n\n"
-                "How can I help you today?"
-            )
-            st.session_state.chat_messages.append({
-                "role": "assistant",
-                "content": welcome,
-                "created_at": datetime.now().strftime("%Y-%m-%d %H:%M")
-            })
+        # Load from DB — filter out any saved error/warning messages
+        history = db.get_chat_history(user_id, limit=50)
+        clean_history = [m for m in history if not _is_error_msg(m.get("content", ""))]
+
+        # Permanently delete bad messages from DB
+        if len(clean_history) < len(history):
+            db.clear_chat_history(user_id)
+            for m in clean_history:
+                db.save_chat_message(user_id, m["role"], m["content"])
+
+        if clean_history:
+            st.session_state.chat_messages = clean_history
+
+    # Also filter any error messages already in session state (from old runs)
+    if st.session_state.get("chat_messages"):
+        before = len(st.session_state.chat_messages)
+        st.session_state.chat_messages = [
+            m for m in st.session_state.chat_messages
+            if not _is_error_msg(m.get("content", ""))
+        ]
+        # If we removed something, clean DB too
+        if len(st.session_state.chat_messages) < before:
+            db.clear_chat_history(user_id)
+            for m in st.session_state.chat_messages:
+                db.save_chat_message(user_id, m["role"], m["content"])
+
+    if not st.session_state.get("chat_messages"):
+        # Show welcome message
+        welcome = (
+            "👋 **Hello! I'm HealthGuard AI**, your personal health monitoring assistant.\n\n"
+            "I can help you with:\n"
+            "• 💊 Medication reminders and tracking\n"
+            "• 📊 Health metrics and wellness data\n"
+            "• 🔍 Medical information from trusted sources\n"
+            "• 📈 Health insights and goal tracking\n\n"
+            "**Disclaimer**: I provide health information for educational purposes only. "
+            "Always consult a qualified healthcare professional for medical advice.\n\n"
+            "How can I help you today?"
+        )
+        st.session_state.chat_messages = [{
+            "role": "assistant",
+            "content": welcome,
+            "created_at": datetime.now().strftime("%Y-%m-%d %H:%M")
+        }]
+
 
     # Display messages
     chat_container = st.container()
@@ -121,6 +151,7 @@ def show_chatbot():
     with col_clr:
         if st.button("🗑️ Clear Chat", use_container_width=True):
             st.session_state.chat_messages = []
+            db.clear_chat_history(user_id)
             st.rerun()
     with col_export:
         if st.session_state.chat_messages:
@@ -156,14 +187,17 @@ def _process_message(prompt: str, user_id: int):
     st.session_state.chat_messages.append(user_msg)
     db.save_chat_message(user_id, "user", prompt)
 
-    # Generate response
-    agent = st.session_state.get("health_agent")
-    if agent:
-        history = st.session_state.chat_messages[:-1]  # exclude the just-added message
-        with st.spinner("HealthGuard AI is thinking..."):
-            response = chat_with_agent(agent, prompt, history)
-    else:
-        response = get_simple_response(prompt)
+    # Generate response using fresh agent instance
+    import importlib
+    from dotenv import load_dotenv
+    load_dotenv(override=True)
+    import agents.health_agent as ha_module
+    importlib.reload(ha_module)
+
+    agent, _ = ha_module.build_health_agent(user_id)
+    history = st.session_state.chat_messages[:-1]
+    with st.spinner("HealthGuard AI is thinking..."):
+        response = ha_module.chat_with_agent(agent, prompt, history)
 
     # Add assistant message
     assistant_msg = {"role": "assistant", "content": response, "created_at": timestamp}
