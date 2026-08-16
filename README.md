@@ -1,142 +1,496 @@
-# 🏥 HealthGuard AI — Multi-Functional Personal Health Assistant
+<p align="center">
+  <img src="https://img.shields.io/badge/HealthGuard-AI-00C9A7?style=for-the-badge&logo=heartbeat&logoColor=white" alt="HealthGuard AI" height="40"/>
+</p>
 
-> **Production-Ready AI Healthcare Agent** — Powered by LangGraph stateful workflow, 21 healthcare tools, Indian healthcare integrations (1mg, Practo, Ayurveda), Family & Caregiver network, ML risk analytics, and Vision & Voice AI.
+<h1 align="center">🏥 HealthGuard AI</h1>
+<h3 align="center">Your Intelligent Personal Health Assistant — Powered by AI</h3>
 
-[![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://python.org)
-[![Streamlit](https://img.shields.io/badge/Streamlit-1.35+-red.svg)](https://streamlit.io)
-[![LangChain](https://img.shields.io/badge/LangChain-0.2+-green.svg)](https://langchain.com)
-[![LangGraph](https://img.shields.io/badge/LangGraph-0.1+-purple.svg)](https://langchain.com)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.10+-3776AB?style=flat-square&logo=python&logoColor=white" />
+  <img src="https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black" />
+  <img src="https://img.shields.io/badge/FastAPI-0.110+-009688?style=flat-square&logo=fastapi&logoColor=white" />
+  <img src="https://img.shields.io/badge/TypeScript-6.0-3178C6?style=flat-square&logo=typescript&logoColor=white" />
+  <img src="https://img.shields.io/badge/TailwindCSS-4.3-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white" />
+  <img src="https://img.shields.io/badge/LangChain-0.2+-1C3C3C?style=flat-square&logo=langchain&logoColor=white" />
+  <img src="https://img.shields.io/badge/Gemini%20AI-Google-4285F4?style=flat-square&logo=google&logoColor=white" />
+  <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" />
+</p>
 
-## 🛠️ Technology Stack Breakdown
-
-| Component Layer | **Track A Stack (Implemented Streamlit App)** | **Track B Stack (Enterprise Microservices)** |
-|---|---|---|
-| **Frontend UI** | Streamlit + Custom Glassmorphic CSS + Web Speech API | React / Next.js + Tailwind CSS + Chart.js |
-| **Backend Engine** | Python 3.10+ + LangChain + LangGraph StateGraph | FastAPI + LangGraph + Celery Async Processing |
-| **Analytics & ML** | pandas + numpy + scikit-learn + Plotly | pandas + scikit-learn + Custom ML Pipeline |
-| **Database & Cache** | SQLite Engine + **Supabase PostgreSQL** + AES-256 Data Encryption | PostgreSQL (Relational Data) + Redis (Caching & Sessions) |
-| **LLM Backbone** | Google Gemini 2.5 Flash / GPT-3.5-turbo / MedAlpaca | GPT-4o / Claude 3.5 Sonnet / Gemini 2.5 Pro |
-| **Healthcare APIs** | 1mg, Practo, PubMed NCBI, OpenWeather AQI | Google Fit API, Nutrition APIs, 1mg, Practo |
-| **Auth & Security** | Multi-Profile Isolation + HIPAA Safe Harbor | Auth0 / Firebase Auth with Healthcare RBAC |
-| **Deployment** | Streamlit Cloud / Docker | Vercel (Frontend) + Railway / Render (Backend) |
-| **Alert Monitoring** | Real-Time Vital Threshold Monitor + Caregiver Network | Custom Analytics Dashboard + Webhooks |
+<p align="center">
+  <b>AI-powered health monitoring • Smart medication tracking • Clinical analytics<br/>Indian healthcare integration • Vision & Voice AI • Family care management</b>
+</p>
 
 ---
 
-## ✨ Comprehensive Feature Matrix
+## 🌟 What is HealthGuard AI?
 
-| Category | Feature | Description |
-|---|---|---|
-| 🇮🇳 **Indian Health** | 💊 **1mg Medicine Lookup** | Search Indian pharmaceuticals, compare prices in INR (₹), and find generic substitutes. |
-| | 🩺 **Practo Doctor Directory** | Search verified specialists across Indian cities and schedule appointments. |
-| | 🌿 **Ayurveda & Dosha Engine** | Herb lookup (Ashwagandha, Tulsi, Triphala) with Vata, Pitta, Kapha Dosha assessment. |
-| | 🛡️ **ABHA & Insurance Locker** | Store Ayushman Bharat ID and manage policies (Star Health, ICICI, HDFC ERGO). |
-| | 🌫️ **AQI & Emergency Helpline** | City air quality respiratory alerts & national emergency numbers (112, 102, 108). |
-| 👨‍👩‍👧 **Family & Caregivers**| 👤 **Multi-Profile Management**| Track separate health profiles for Self, Parents, Spouse, and Children. |
-| | 🔔 **Caregiver Alert System** | Configure phone/email contacts for simulated SMS/Email notifications on critical vitals. |
-| | 🚨 **Real-Time Vitals Alerts** | Automatically flags critical vitals (e.g. BP > 180 mmHg) with emergency alert logs. |
-| 👁️🎙️ **Vision & Voice AI** | 🖼️ **Vision AI OCR** | Parse prescription images, lab reports, skin condition rash photos, and food photos. |
-| | 🎙️ **Speech-to-Text Voice Query**| Web Speech API browser integration for hands-free spoken health queries. |
-| 📊 **Analytics & ML** | 🫀 **Predictive Disease Risk** | 10-year Framingham Cardiovascular Disease (CVD) risk, Type 2 Diabetes & Hypertension risk. |
-| | 🔮 **Trend & Anomaly ML** | Z-score anomaly detection and linear regression vital trend forecasting. |
-| | 📄 **Automated Clinical Reports**| 1-Click downloadable HTML and Markdown health summary reports. |
-| 💊 **Medications & Vitals**| 💊 **Medication Adherence** | 7-day adherence rate breakdown, missed/taken logging, and drug-drug interaction checker. |
-| | 📝 **Health Data Import/Export**| Multi-format import and export (JSON, CSV, XML, HTML, Markdown). |
+**HealthGuard AI** is a comprehensive, AI-powered personal health assistant that combines the intelligence of Large Language Models (Google Gemini / OpenAI GPT) with a modern React dashboard and FastAPI backend. It helps you **track vitals, manage medications, analyze symptoms, log nutrition, and get personalized health insights** — all in one place.
+
+Built with a **LangGraph stateful agent pipeline**, HealthGuard AI doesn't just answer health questions — it reasons, triages emergencies, checks drug interactions, runs risk assessments, and even searches Indian pharmaceutical databases.
+
+> ⚠️ **Disclaimer**: HealthGuard AI is a health *informational* tool. It is NOT a substitute for professional medical advice, diagnosis, or treatment. Always consult qualified healthcare providers.
 
 ---
 
-## 🚀 Quick Start Guide
+## ✨ Key Features
+
+### 🤖 AI Health Chatbot
+- Conversational AI powered by **Google Gemini 2.5 Flash** or **OpenAI GPT**
+- Real-time **SSE streaming** responses for zero-latency UX
+- Emergency triage detection with automatic escalation
+- Context-aware multi-turn conversations with chat history
+
+### 💊 Medication Management
+- Add, track, and manage daily medications with dosage & schedules
+- **Drug-drug interaction checker** (flags severe/moderate/contraindicated combinations)
+- Medication adherence tracking with 7/30-day reports
+- Missed dose alerts and reminders
+
+### 📊 Health Vitals Dashboard
+- Log and visualize **blood pressure, heart rate, blood sugar, SpO₂, temperature, weight**
+- Interactive charts with **Recharts** data visualization
+- 7-day trend analysis with smart health summaries
+- Real-time vital threshold monitoring with alerts
+
+### 🍽️ Nutrition & Diet Tracker
+- Log meals with calorie, protein, carbs, and fat breakdowns
+- Daily macro summary with nutritional insights
+- AI-powered diet recommendations
+
+### 🔬 Clinical Analytics
+- **Symptom Analysis**: AI-powered symptom triaging with urgency scoring
+- **Risk Assessment**: Cardiovascular, diabetes, and other condition risk calculators
+- **Automated Health Reports**: Generate comprehensive patient health reports
+- **PubMed Research**: Search medical literature via NCBI API
+
+### 🇮🇳 India-Specific Health Features
+- **1mg Medicine Search**: Find Indian brand-name & generic medicines with ₹ prices
+- **Ayurvedic & AYUSH**: Search traditional herbs, remedies, and Dosha balancing
+- **Practo Doctor Search**: Find doctors by specialty and city
+- **Air Quality Index (AQI)**: Check city-wise AQI for respiratory risk assessment
+
+### 👁️ Vision & Voice AI
+- **Medical Image Analysis**: Upload and analyze medical images with AI
+- **Voice Query Processing**: Natural language voice-to-text health queries
+
+### 👨‍👩‍👧‍👦 Family & Caregiver Management
+- Add family members with medical profiles
+- Caregiver contact management with alert preferences
+- Critical health and missed medication notifications
+
+---
+
+## 🏗️ Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    React 19 + TailwindCSS 4                     │
+│              (Vite + TypeScript Frontend — :5173)               │
+└────────────────────────────┬────────────────────────────────────┘
+                             │  REST API + SSE Streaming
+                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                   FastAPI Backend Server (:8000)                │
+│              ┌─────────────────────────────────┐                │
+│              │  LangGraph Stateful Agent        │                │
+│              │  (Emergency Triage → Tool Router)│                │
+│              └──────┬──────────┬──────────┬─────┘                │
+│                     │          │          │                       │
+│  ┌──────────────────┤    ┌─────┴──────┐   ├──────────────────┐   │
+│  │ Clinical Tools   │    │ Health DB  │   │ Indian Health    │   │
+│  │ • Symptom Triage │    │ (SQLite)   │   │ • 1mg Meds API  │   │
+│  │ • Drug Interact. │    │ • Users    │   │ • Practo Search │   │
+│  │ • Risk Assess.   │    │ • Vitals   │   │ • Ayurveda/AYUSH│   │
+│  │ • Auto Reports   │    │ • Meds     │   │ • AQI Monitor   │   │
+│  └──────────────────┘    │ • Nutrition│   └──────────────────┘   │
+│                          │ • Chat     │                          │
+│  ┌──────────────────┐    │ • Family   │   ┌──────────────────┐   │
+│  │ Vision & Voice   │    └────────────┘   │ Medical Research │   │
+│  │ • Image Analysis │                     │ • PubMed/NCBI    │   │
+│  │ • Voice Queries  │                     │ • Med Info       │   │
+│  └──────────────────┘                     └──────────────────┘   │
+└─────────────────────────────────────────────────────────────────┘
+                             │
+                             ▼
+              ┌──────────────────────────┐
+              │  LLM Providers           │
+              │  • Google Gemini 2.5     │
+              │  • OpenAI GPT-3.5/4     │
+              │  (Auto-Fallback)         │
+              └──────────────────────────┘
+```
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|---|---|
+| **Frontend** | React 19, TypeScript 6, Vite 8, TailwindCSS 4, Recharts, Lucide Icons |
+| **Backend** | Python 3.10+, FastAPI, Uvicorn, Pydantic v2 |
+| **AI/ML Engine** | LangChain, LangGraph (Stateful Agent Pipeline), Google Gemini, OpenAI GPT |
+| **Database** | SQLite (local), Supabase PostgreSQL (cloud-ready) |
+| **Healthcare APIs** | 1mg (Medicine), Practo (Doctors), PubMed/NCBI (Research), OpenWeather (AQI) |
+| **HTTP Client** | Axios (frontend), Requests (backend) |
+| **Dev Tools** | OxLint, PostCSS, Autoprefixer |
+
+---
+
+## 🚀 Quick Start
 
 ### Prerequisites
-- Python 3.10 or higher
-- pip package manager
 
-### 1. Clone & Navigate
+- **Python** 3.10+ ([Download](https://www.python.org/downloads/))
+- **Node.js** 18+ ([Download](https://nodejs.org/))
+- **Google Gemini API Key** (free tier available) — [Get Key](https://aistudio.google.com/app/apikey)
+
+### 1️⃣ Clone the Repository
+
 ```bash
-git clone <your-repo-url>
-cd "Healthcare Monitoring AI Agent"
+git clone https://github.com/ankitpal85/HealthGuard-AI.git
+cd HealthGuard-AI
 ```
 
-### 2. Activate Virtual Environment
-```powershell
-# Windows (PowerShell)
-.\venv\Scripts\Activate.ps1
+### 2️⃣ Set Up Environment Variables
 
-# macOS/Linux
+```bash
+cp .env.example .env
+```
+
+Edit `.env` and add your API key:
+
+```env
+# Choose your LLM provider
+LLM_PROVIDER=gemini          # "gemini" or "openai"
+
+# Google Gemini (recommended — free tier available)
+GOOGLE_API_KEY=your_google_api_key_here
+
+# OpenAI (alternative)
+OPENAI_API_KEY=your_openai_api_key_here
+
+# App Config
+APP_SECRET_KEY=your_random_secret_key
+DB_PATH=health_data.db
+```
+
+### 3️⃣ Install Backend Dependencies
+
+```bash
+# Create virtual environment (recommended)
+python -m venv venv
+
+# Activate (Windows)
+venv\Scripts\activate
+
+# Activate (macOS/Linux)
 source venv/bin/activate
-```
 
-### 3. Install Dependencies
-```bash
+# Install dependencies
 pip install -r requirements.txt
 ```
 
-### 4. Configure Environment Variables
-Copy `.env.example` to `.env`:
-```bash
-GOOGLE_API_KEY=your_gemini_api_key_here
-LLM_PROVIDER=gemini
-```
-*(No API key? The system seamlessly falls back to the built-in Smart Generative Healthcare Engine so all features work completely offline!)*
+### 4️⃣ Install Frontend Dependencies
 
-### 5. Launch the Application
 ```bash
-streamlit run app.py
+cd frontend
+npm install
+cd ..
 ```
-Open **[http://localhost:8501](http://localhost:8501)** in your browser.
+
+### 5️⃣ Start the Application
+
+**Option A — One-Click (Windows):**
+```bash
+start.bat
+```
+
+**Option B — Manual Start:**
+
+```bash
+# Terminal 1: Start Backend (port 8000)
+python -m uvicorn backend.main:app --port 8000 --reload
+
+# Terminal 2: Start Frontend (port 5173)
+cd frontend
+npm run dev
+```
+
+### 6️⃣ Open the App
+
+| Service | URL |
+|---|---|
+| 🖥️ **React Dashboard** | [http://localhost:5173](http://localhost:5173) |
+| 📡 **FastAPI Backend** | [http://localhost:8000](http://localhost:8000) |
+| 📄 **API Docs (Swagger)** | [http://localhost:8000/docs](http://localhost:8000/docs) |
+| 📘 **API Docs (ReDoc)** | [http://localhost:8000/redoc](http://localhost:8000/redoc) |
 
 ---
 
-## 📂 Project Structure
+## 📁 Project Structure
 
 ```
-Healthcare Monitoring AI Agent/
-├── app.py                    # Main Streamlit application & navigation router
-├── requirements.txt          # Dependencies (Streamlit, LangChain, LangGraph, Plotly)
-├── README.md                 # Project README
-├── TECHNICAL_DOCUMENTATION.md # Architecture, Microservices & HIPAA Security Specs
-├── .env.example              # Environment variables template
-├── database/
-│   └── db_manager.py         # SQLite CRUD & seeding for 13 healthcare tables
-├── agents/
-│   └── health_agent.py       # LangGraph stateful agent with emergency triage node & 21 tools
-├── tools/
-│   ├── clinical_tools.py     # Drug interactions, symptom triage & automated report tools
-│   ├── indian_health_tool.py # 1mg search, Practo doctor lookup, Ayurveda & AQI tools
-│   ├── medical_info_tool.py  # MedlinePlus lookup tool
-│   ├── medical_research_tool.py # PubMed literature search & summarization tool
-│   ├── medication_tool.py    # Medication scheduling & adherence tracking tools
-│   ├── health_data_tool.py   # Fitness & vital metric logging tools
-│   └── vision_voice_tool.py  # Prescription OCR, skin rash diagnostic & voice query tools
-├── utils/
-│   ├── analytics.py          # Predictive ML risk models (Framingham CVD, Diabetes, Anomaly)
-│   ├── data_parser.py        # Multi-format import/export (JSON, CSV, XML)
-│   ├── report_generator.py   # Automated HTML and Markdown report generator
-│   ├── security.py          # Data encryption, input validation & HIPAA anonymization
-│   └── visualizations.py    # Plotly interactive healthcare charts
-└── pages/
-    ├── dashboard.py          # Real-time metrics overview & quick logging
-    ├── medications.py        # Medication schedule & adherence reports
-    ├── nutrition.py          # Indian & global meal logger & macro breakdown
-    ├── health_log.py         # Vital metrics logger & data importer/exporter
-    ├── analytics.py          # ML risk models, trend forecasting & report exports
-    ├── indian_health.py      # 1mg lookup, Practo, Ayurveda & ABHA locker
-    ├── family_caregiver.py   # Family profiles, caregiver contacts & real-time alert logs
-    ├── vision_voice.py       # Vision AI image analyzer & speech-to-text assistant
-    └── chatbot.py            # AI Chatbot connected to 21 healthcare tools
+HealthGuard-AI/
+├── 🖥️ frontend/                  # React + TypeScript Frontend
+│   ├── src/
+│   │   ├── components/           # Reusable UI components
+│   │   │   ├── Header.tsx        # Top navigation bar with user selector
+│   │   │   ├── Sidebar.tsx       # Side navigation menu
+│   │   │   ├── Dashboard.tsx     # Dashboard widget component
+│   │   │   └── Chatbot.tsx       # Chat message component
+│   │   ├── pages/                # Page-level views
+│   │   │   ├── Dashboard.tsx     # Health overview & vitals summary
+│   │   │   ├── Chatbot.tsx       # AI health chatbot with SSE streaming
+│   │   │   ├── Medications.tsx   # Medication management & tracking
+│   │   │   ├── HealthLog.tsx     # Vital signs logging & charts
+│   │   │   ├── Nutrition.tsx     # Meal & nutrition tracking
+│   │   │   ├── Analytics.tsx     # Clinical analytics & risk reports
+│   │   │   ├── IndianHealth.tsx  # India-specific health features
+│   │   │   ├── FamilyCaregiver.tsx # Family & caregiver management
+│   │   │   └── VisionVoice.tsx   # Vision & voice AI features
+│   │   ├── services/
+│   │   │   └── api.ts            # Axios API service layer
+│   │   ├── App.tsx               # Root application component
+│   │   ├── main.tsx              # React entry point
+│   │   └── index.css             # Global styles & design tokens
+│   ├── package.json
+│   ├── vite.config.ts
+│   ├── tailwind.config.js
+│   └── tsconfig.json
+│
+├── ⚙️ backend/
+│   └── main.py                   # FastAPI server — all REST & SSE endpoints
+│
+├── 🤖 agents/
+│   └── health_agent.py           # LangGraph stateful AI agent pipeline
+│
+├── 🔧 tools/                     # LangChain tool functions
+│   ├── clinical_tools.py         # Drug interactions, symptom analysis, risk assessment
+│   ├── health_data_tool.py       # Vitals logging & health summary
+│   ├── medication_tool.py        # Medication CRUD & adherence tracking
+│   ├── indian_health_tool.py     # 1mg, Ayurveda, Practo, AQI tools
+│   ├── medical_info_tool.py      # Medical information lookup
+│   ├── medical_research_tool.py  # PubMed research search
+│   └── vision_voice_tool.py      # Image analysis & voice processing
+│
+├── 🗄️ database/
+│   └── db_manager.py             # SQLite database manager (800+ lines)
+│
+├── 📊 utils/
+│   └── analytics.py              # Health analytics & ML risk models
+│
+├── 🧪 tests/                     # Test suite
+│   ├── test_app.py
+│   ├── test_integration.py
+│   ├── test_supabase.py
+│   └── test_week3_4.py
+│
+├── .env.example                  # Environment variable template
+├── .gitignore
+├── requirements.txt              # Python dependencies
+├── start.bat                     # One-click launcher (Windows)
+├── TECHNICAL_DOCUMENTATION.md    # Detailed technical architecture docs
+└── README.md                     # ← You are here
 ```
 
 ---
 
-## 🧪 Testing & Verification
+## 🔌 API Reference
 
-Run the comprehensive integration test suite:
+HealthGuard AI exposes a comprehensive REST API. Full interactive docs are available at `/docs` (Swagger UI) when the server is running.
+
+### Core Endpoints
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/health` | Health check |
+| `GET` | `/api/users` | List all users |
+| `POST` | `/api/users` | Create a new user |
+| `GET` | `/api/users/{user_id}` | Get user profile |
+
+### Dashboard & Vitals
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/dashboard/summary` | Dashboard summary (vitals, adherence, alerts) |
+| `GET` | `/api/vitals` | Get vital sign logs |
+| `POST` | `/api/vitals` | Log a new vital sign reading |
+
+### Medications
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/medications` | List medications |
+| `POST` | `/api/medications` | Add a new medication |
+| `POST` | `/api/medications/log` | Log medication intake |
+| `GET` | `/api/medications/adherence` | Get adherence rate |
+
+### AI Chat
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/chat` | Send message to AI (standard response) |
+| `POST` | `/api/chat/stream` | Send message to AI (SSE streaming) |
+| `GET` | `/api/chat/history` | Get chat history |
+| `DELETE` | `/api/chat/history` | Clear chat history |
+
+### Nutrition
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/nutrition` | Get nutrition logs & macro summary |
+| `POST` | `/api/nutrition` | Log a meal |
+
+### Clinical & Analytics
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/symptoms/analyze` | AI symptom analysis |
+| `POST` | `/api/risk-assessment` | Run health risk assessment |
+| `GET` | `/api/reports/generate` | Generate automated health report |
+
+### Indian Health
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/indian-health/medications` | Search Indian medicines (1mg) |
+| `GET` | `/api/indian-health/ayurveda` | Search Ayurvedic herbs |
+| `GET` | `/api/indian-health/doctors` | Search doctors (Practo) |
+| `GET` | `/api/indian-health/aqi` | Check Air Quality Index |
+
+### Vision & Voice
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/vision/analyze` | Analyze medical image |
+| `POST` | `/api/voice/process` | Process voice query |
+
+### Family & Caregivers
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/family` | List family members |
+| `POST` | `/api/family` | Add family member |
+| `GET` | `/api/caregivers` | List caregivers |
+| `POST` | `/api/caregivers` | Add caregiver |
+
+---
+
+## 🧠 AI Agent Pipeline
+
+HealthGuard AI uses a **LangGraph stateful agent** pipeline that goes beyond simple Q&A:
+
+```
+User Query
+    │
+    ▼
+┌───────────────────────┐
+│  Emergency Triage     │  ← Detects chest pain, stroke, poisoning, etc.
+│  (Priority Router)    │    Immediate emergency response if detected
+└───────────┬───────────┘
+            │
+            ▼
+┌───────────────────────┐
+│  LLM Reasoning        │  ← Multi-provider: Gemini ↔ OpenAI auto-fallback
+│  + Tool Selection      │    Selects appropriate healthcare tools
+└───────────┬───────────┘
+            │
+            ▼
+┌───────────────────────┐
+│  Tool Execution       │  ← 15+ specialized healthcare tools
+│  (LangChain Tools)    │    Drug checks, vitals, nutrition, research...
+└───────────┬───────────┘
+            │
+            ▼
+┌───────────────────────┐
+│  Response Generation  │  ← Context-aware, medically informed response
+│  + Chat History Save  │    Saved to database for continuity
+└───────────────────────┘
+```
+
+### Available AI Tools (15+)
+
+| Tool | Purpose |
+|---|---|
+| `medical_info_lookup` | Look up medical conditions & terminology |
+| `add_medication_reminder` | Add medication with schedule |
+| `get_todays_medications` | Retrieve today's medication list |
+| `mark_medication_taken` | Mark a medication as taken |
+| `get_medication_adherence_report` | Generate adherence analytics |
+| `check_medication_interactions` | Check drug-drug interactions |
+| `analyze_symptoms` | AI-powered symptom triaging |
+| `log_health_metric` | Log vital signs |
+| `get_health_summary` | Get health data summary |
+| `calculate_bmi` | Calculate BMI with interpretation |
+| `log_nutrition_log` | Log meal nutrition data |
+| `run_risk_assessment_tool` | Run clinical risk assessment |
+| `generate_automated_report` | Auto-generate patient reports |
+| `search_indian_medication_tool` | Search Indian medicines |
+| `search_ayurvedic_herbs_tool` | Search Ayurvedic remedies |
+| `search_practo_doctors_tool` | Find doctors by specialty/city |
+| `check_air_quality_tool` | Check city AQI levels |
+| `search_pubmed_research` | Search PubMed medical literature |
+| `analyze_medical_image_tool` | Analyze medical images with AI |
+| `process_voice_query_tool` | Process voice-to-text health queries |
+
+---
+
+## 🧪 Running Tests
+
 ```bash
-python test_integration.py
+# Activate virtual environment
+venv\Scripts\activate          # Windows
+source venv/bin/activate       # macOS/Linux
+
+# Run all tests
+python -m pytest tests/ -v
+
+# Run specific test file
+python -m pytest tests/test_app.py -v
 ```
 
 ---
 
-## 🔒 Healthcare Security & HIPAA Compliance
-HealthGuard AI implements data encryption at rest for clinical notes, input validation bounds on physiological vitals, and HIPAA Safe Harbor 18-element de-identification on exported patient analytics. See `TECHNICAL_DOCUMENTATION.md` for complete technical architecture details.
+## 🤝 Contributing
+
+Contributions are welcome! Here's how to get started:
+
+1. **Fork** the repository
+2. **Create** a feature branch: `git checkout -b feature/amazing-feature`
+3. **Commit** your changes: `git commit -m 'feat: add amazing feature'`
+4. **Push** to the branch: `git push origin feature/amazing-feature`
+5. **Open** a Pull Request
+
+### Commit Convention
+
+This project follows [Conventional Commits](https://www.conventionalcommits.org/):
+
+| Type | Purpose |
+|---|---|
+| `feat:` | New feature |
+| `fix:` | Bug fix |
+| `docs:` | Documentation changes |
+| `refactor:` | Code refactoring |
+| `test:` | Adding/updating tests |
+| `chore:` | Maintenance tasks |
+
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 👨‍💻 Author
+
+**Ankit Pal**
+
+- GitHub: [@ankitpal85](https://github.com/ankitpal85)
+
+---
+
+<p align="center">
+  <b>Built with ❤️ for better health outcomes</b><br/>
+  <sub>If you find HealthGuard AI useful, consider giving it a ⭐ on GitHub!</sub>
+</p>
