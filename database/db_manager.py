@@ -248,6 +248,23 @@ def init_db():
         )
     """)
 
+    # ── Nutrition Logs ────────────────────────────────────────────────────
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS nutrition_logs (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id     INTEGER NOT NULL REFERENCES users(id),
+            meal_type   TEXT NOT NULL,
+            food_items  TEXT NOT NULL,
+            calories    REAL DEFAULT 0,
+            protein_g   REAL DEFAULT 0,
+            carbs_g     REAL DEFAULT 0,
+            fats_g      REAL DEFAULT 0,
+            water_ml    REAL DEFAULT 0,
+            date_str    TEXT DEFAULT (date('now')),
+            created_at  TEXT DEFAULT (datetime('now'))
+        )
+    """)
+
     conn.commit()
 
     # Seed data if empty

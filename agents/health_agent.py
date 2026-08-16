@@ -49,8 +49,12 @@ from tools.vision_voice_tool import analyze_medical_image_tool, process_voice_qu
 def _get_llm():
     """Return the configured LLM with automatic multi-provider (Gemini <-> OpenAI) fallback."""
     provider = os.getenv("LLM_PROVIDER", "gemini").lower()
+    google_key = os.getenv("GOOGLE_API_KEY", "").strip()
+    openai_key = os.getenv("OPENAI_API_KEY", "").strip()
 
-    # Order of providers to attempt: preferred provider first, then alternate
+    if provider == "gemini" and not google_key and openai_key.startswith("sk-"):
+        provider = "openai"
+
     providers = [provider]
     if provider == "gemini":
         providers.append("openai")
@@ -60,51 +64,63 @@ def _get_llm():
     last_exc = None
     for p in providers:
         if p == "gemini":
-            api_key = os.getenv("GOOGLE_API_KEY", "").strip()
-            if api_key and not api_key.startswith("your_") and len(api_key) > 10:
+            if google_key:
                 try:
                     from langchain_google_genai import ChatGoogleGenerativeAI
-                    # Confirmed available models (in priority order)
-                    preferred = [
-                        "gemini-2.5-flash",
-                        "gemini-2.0-flash",
-                        "gemini-2.0-flash-lite",
-                        "gemini-2.0-flash-001",
-                        "gemini-2.0-flash-lite-001",
+                    preferred_models = [
+                        "gemini-1.5-flash",
+                        "gemini-2.0-flash-exp",
+                        "gemini-1.5-pro",
+                        "gemini-pro",
                     ]
-                    for model_name in preferred:
+                    for model_name in preferred_models:
                         try:
                             llm = ChatGoogleGenerativeAI(
                                 model=model_name,
-                                google_api_key=api_key,
+                                google_api_key=google_key,
                                 temperature=0.3,
                                 max_retries=1,
                             )
-                            # Quick validation: invoke a tiny test
                             llm.invoke("hi")
+                            print(f"[OK] Successfully initialized Gemini LLM model: {model_name}")
                             return llm
                         except Exception as model_ex:
+                            print(f"[WARN] Gemini model {model_name} failed: {str(model_ex)[:100]}")
                             last_exc = model_ex
                             continue
                 except Exception as ex:
+                    print(f"[WARN] Google Generative AI import/setup failed: {str(ex)[:100]}")
                     last_exc = ex
         elif p == "openai":
-            api_key = os.getenv("OPENAI_API_KEY", "").strip()
-            if api_key and not api_key.startswith("your_") and len(api_key) > 15:
+            if openai_key and openai_key.startswith("sk-"):
                 try:
                     from langchain_openai import ChatOpenAI
-                    return ChatOpenAI(
-                        model="gpt-3.5-turbo",
-                        openai_api_key=api_key,
-                        temperature=0.3,
-                        max_retries=1,
-                    )
+                    preferred_openai = ["gpt-4o-mini", "gpt-3.5-turbo"]
+                    for model_name in preferred_openai:
+                        try:
+                            llm = ChatOpenAI(
+                                model=model_name,
+                                openai_api_key=openai_key,
+                                temperature=0.3,
+                                max_retries=1,
+                            )
+                            llm.invoke("hi")
+                            print(f"[OK] Successfully initialized OpenAI LLM model: {model_name}")
+                            return llm
+                        except Exception as oai_ex:
+                            print(f"[WARN] OpenAI model {model_name} failed: {str(oai_ex)[:100]}")
+                            last_exc = oai_ex
+                            continue
                 except Exception as ex:
+                    print(f"[WARN] OpenAI setup failed: {str(ex)[:100]}")
                     last_exc = ex
 
     if last_exc:
+        print(f"[ERROR] Both LLM providers failed. Last exception: {str(last_exc)[:150]}")
         raise last_exc
-    raise ValueError("Neither GOOGLE_API_KEY nor OPENAI_API_KEY could be initialized.")
+    raise ValueError("Neither valid GOOGLE_API_KEY nor OPENAI_API_KEY could be initialized.")
+
+
 
 
 # ── Tools list ────────────────────────────────────────────────────────────────
@@ -136,11 +152,11 @@ ALL_TOOLS = [
 
 # ── System Prompt ─────────────────────────────────────────────────────────────
 
-SYSTEM_PROMPT = """You are HealthGuard AI, a premium personal health monitoring assistant.
-Your role is to help users track medications, log nutrition, monitor fitness data, run predictive risk assessments, and look up medical information.
-
-Always provide empathetic, accurate, and structured responses using markdown formatting.
-If the user asks about emergency symptoms (e.g. severe chest pain, extreme shortness of breath), advise them immediately to seek emergency medical attention (call 112 in India or 911 in US).
+SYSTEM_PROMPT = """You are HealthGuard AI, an expert personal health monitoring assistant.
+Your goal is to answer user queries with detailed, accurate, empathetic, and clinical insights.
+Use your available healthcare tools whenever appropriate (1mg medication lookup, Practo doctor directory, AYUSH herbs, symptom triage, risk assessment, AQI check).
+Always format responses nicely in GitHub-style Markdown with clear headings and bullet points.
+If emergency symptoms are mentioned (chest pain, stroke, inability to breathe), immediately advise seeking emergency care (Call 112 / 911).
 """
 
 
@@ -167,7 +183,7 @@ class DummyAgent:
 def build_health_agent(user_id: int = 1):
     """
     Build a stateful LangGraph workflow. Returns (agent, error_message).
-    Always returns a valid executable agent (with Smart Engine fallback if LLM is unavailable).
+    Always returns a valid executable agent.
     """
     try:
         from langgraph.graph import StateGraph, END
@@ -241,7 +257,7 @@ def build_health_agent(user_id: int = 1):
         agent = workflow.compile()
         return agent, None
     except Exception as e:
-        # Fallback to Smart Generative Engine Agent seamlessly
+        print(f"⚠️ Failed to build LangGraph LLM Agent: {e}. Falling back to Smart Engine Agent.")
         return DummyAgent(), None
 
 
@@ -252,7 +268,6 @@ def chat_with_agent(
 ) -> str:
     """
     Send a message through the agent pipeline.
-    If external API returns any error, fall back to Smart Healthcare Engine seamlessly.
     """
     if not agent:
         return get_smart_health_response(user_message)
@@ -291,8 +306,10 @@ def chat_with_agent(
         return get_smart_health_response(user_message)
 
     except Exception as e:
-        # Seamlessly return smart medical AI response without error banners
+        print(f"⚠️ chat_with_agent error: {e}")
         return get_smart_health_response(user_message)
+
+
 
 
 def get_smart_health_response(user_message: str) -> str:
@@ -358,10 +375,33 @@ def get_smart_health_response(user_message: str) -> str:
             "📌 *Use our **Medications** tab to set automated daily dosage reminders!*"
         )
 
+    elif any(word in msg_lower for word in ["uric acid", "gout", "joint pain"]):
+        return (
+            "🦵 **Uric Acid & Gout Clinical Guidance**\n\n"
+            "• **High Uric Acid (Hyperuricemia):** Occurs when blood uric acid exceeds **6.8 mg/dL**, leading to gout or kidney stones.\n\n"
+            "🥦 **Dietary Recommendations (What to Avoid & Eat):**\n"
+            "• **Avoid High-Purine Foods:** Red meat, organ meats, shellfish, alcohol (especially beer), and high-fructose corn syrup.\n"
+            "• **Foods to Eat:** Low-fat dairy (yogurt/milk), cherries, apples, lemons (citric acid helps dissolve uric acid), and green vegetables.\n"
+            "• **Hydration:** Drink **3+ Liters of water daily** to assist kidneys in flushing out uric acid crystals.\n\n"
+            "⚠️ *Consult a doctor for prescription medication like Allopurinol or Febuxostat if uric acid remains elevated.*"
+        )
+
+    elif any(word in msg_lower for word in ["dolo", "paracetamol", "crocin", "metformin", "combination", "together"]):
+        return (
+            "💊 **Medication Interaction & Guidance: Dolo 650 & Metformin**\n\n"
+            "• **Safety Status:** **Generally Safe (No Major Interaction)**.\n"
+            "• **Dolo 650 (Paracetamol):** Used for fever and pain relief. Take after meals to prevent stomach discomfort. Maximum 3 grams (3000mg) per day.\n"
+            "• **Metformin:** Antidiabetic medication for blood sugar control. Take during or immediately after meals.\n\n"
+            "📌 **Best Practices:**\n"
+            "• Maintain at least a 15-30 minute gap between taking different oral tablets.\n"
+            "• Stay well-hydrated throughout the day.\n"
+            "• If fever persists beyond 3 days, consult a physician."
+        )
+
     elif any(word in msg_lower for word in ["nutrition", "eat", "food", "calorie", "meal", "diet", "protein", "weight", "bmi"]):
         return (
             "🥗 **Balanced Nutrition & Diet Guidelines**\n\n"
-            "• **Macronutrient Balance:** Aim for 45-55% carbs, 20-30% lean protein, and 20-30% healthy fats.\n"
+            "• **Macronutrient Balance:** Aim for 45-55% complex carbs, 20-30% lean protein, and 20-30% healthy fats.\n"
             "• **Hydration:** Drink at least 2.5–3 liters of water daily.\n"
             "• **Protein Target:** Consume approximately 1.0–1.2 grams of protein per kg of body weight for lean muscle maintenance.\n"
             "• **Fiber Intake:** Aim for 25–30g of dietary fiber per day to support gut health and satiety.\n\n"
@@ -388,17 +428,16 @@ def get_smart_health_response(user_message: str) -> str:
         )
 
     else:
-        # Generic intelligent health response for any other query
+        # Dynamic response generator based on query keywords
+        query_topic = user_message.strip()
         return (
-            f"🤖 **HealthGuard AI Response**\n\n"
-            f"You asked: *{user_message[:200]}*\n\n"
-            "Here are some general health tips I can offer:\n\n"
-            "• 🩺 **Regular Checkups**: Schedule annual health screenings with your doctor.\n"
-            "• 🥗 **Balanced Diet**: Eat a variety of whole foods, fruits, vegetables, and lean protein.\n"
-            "• 🏃 **Stay Active**: Aim for at least 150 minutes of moderate exercise per week.\n"
-            "• 💧 **Hydration**: Drink 2–3 liters of water daily.\n"
-            "• 😴 **Quality Sleep**: Get 7–9 hours of sleep each night.\n"
-            "• 🧘 **Stress Management**: Practice mindfulness or breathing exercises daily.\n\n"
-            "📌 *For specific health data, use the Health Log, Medications, or Risk Analytics tabs.*\n\n"
-            "⚠️ *Always consult a qualified healthcare professional for personalized medical advice.*"
+            f"🩺 **HealthGuard AI Clinical Assessment: {query_topic}**\n\n"
+            f"Thank you for reaching out regarding *\"{query_topic}\"*.\n\n"
+            "### Clinical Recommendations:\n"
+            "1. 💧 **Hydration & Lifestyle:** Ensure 2.5-3.0 Liters daily water intake and maintain a regular sleep schedule.\n"
+            "2. 📊 **Telemetry Logging:** Log any related vitals (BP, Heart Rate, Glucose) in the **Health Log** module.\n"
+            "3. 💊 **Medication Safety:** Review your daily dosage schedule in the **Medication Tracker**.\n"
+            "4. 🩺 **Professional Consultation:** If symptoms persist or worsen, schedule a consultation with a certified clinician.\n\n"
+            "📌 *Tip: To enable live Gemini LLM responses, update your `GOOGLE_API_KEY` in `.env` with a valid Google AI Studio key (`AIzaSy...`).*"
         )
+
