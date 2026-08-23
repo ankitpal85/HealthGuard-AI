@@ -9,7 +9,8 @@ import sys
 from datetime import datetime
 from typing import Optional
 
-DB_PATH = os.getenv("DB_PATH", "health_data.db")
+DB_PATH = os.getenv("DB_PATH", os.path.join(os.path.dirname(os.path.abspath(__file__)), "health_data.db"))
+
 
 
 def get_active_db_provider() -> str:

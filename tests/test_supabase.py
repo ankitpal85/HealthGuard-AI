@@ -2,10 +2,15 @@
 import os
 import sys
 sys.stdout.reconfigure(encoding='utf-8')
-from dotenv import load_dotenv
-load_dotenv()
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BACKEND_DIR = os.path.join(BASE_DIR, 'backend')
+if BACKEND_DIR not in sys.path:
+    sys.path.insert(0, BACKEND_DIR)
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
 
 from database.supabase_manager import get_supabase_client, is_supabase_active
+
 
 def main():
     print("=== Supabase Cloud Connection Test ===")

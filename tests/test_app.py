@@ -1,7 +1,15 @@
-import sys, os
-sys.path.insert(0, '.')
+import os
+import sys
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BACKEND_DIR = os.path.join(BASE_DIR, 'backend')
+if BACKEND_DIR not in sys.path:
+    sys.path.insert(0, BACKEND_DIR)
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
+
 
 print('--- Testing database module ---')
+
 from database import db_manager as db
 db.init_db()
 uid = db.create_user('Test User', age=25, gender='Male', weight_kg=70, height_cm=175)
