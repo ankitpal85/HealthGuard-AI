@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { analyzeSymptoms, runRiskAssessment, generateHealthReport } from '../services/api';
+import { analyzeSymptoms, runRiskAssessment, generateHealthReport, downloadDoctorPdfReport } from '../services/api';
 import { TrendingUp, Stethoscope, AlertTriangle, FileText, Download, Sparkles } from 'lucide-react';
 
 interface AnalyticsProps {
@@ -87,15 +87,25 @@ export const Analytics: React.FC<AnalyticsProps> = ({ userId }) => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between glass-panel p-6 rounded-2xl" style={{ border: '1px solid rgba(14,165,233,0.1)' }}>
+    <div className="space-y-6 animate-in fade-in duration-300">
+      <div className="flex flex-wrap items-center justify-between glass-panel p-6 rounded-2xl gap-4" style={{ border: '1px solid rgba(14,165,233,0.1)' }}>
         <div>
           <h2 className="text-xl font-extrabold text-white flex items-center gap-2" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
             <TrendingUp className="w-6 h-6" style={{ color: '#0EA5E9' }} /> Clinical Analytics & Risk Predictors
           </h2>
           <p className="text-xs mt-1" style={{ color: '#64748B' }}>Run AI symptom checker, predictive disease risk models, and generate comprehensive medical reports</p>
         </div>
+
+        <button
+          onClick={() => downloadDoctorPdfReport(userId)}
+          className="px-5 py-2.5 rounded-xl font-extrabold text-xs text-white transition-all shadow-lg flex items-center gap-2 cursor-pointer"
+          style={{ background: 'linear-gradient(135deg, #06D6A0, #0EA5E9)', boxShadow: '0 6px 20px rgba(6,214,160,0.25)' }}
+        >
+          <Download className="w-4 h-4" />
+          <span>Download Doctor Report (PDF)</span>
+        </button>
       </div>
+
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Symptom Checker Tool */}

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { analyzeVisionImage, processVoiceQuery } from '../services/api';
-import { Eye, Mic, MicOff, FileImage, Sparkles, Volume2 } from 'lucide-react';
+import { analyzeVisionImage, processVoiceQuery, uploadMedicalReportFile } from '../services/api';
+import { Eye, Mic, MicOff, FileImage, Sparkles, Volume2, Upload, FileText, CheckCircle2, AlertTriangle, Activity } from 'lucide-react';
 
 interface VisionVoiceProps {
   userId: number;
@@ -9,12 +9,30 @@ interface VisionVoiceProps {
 export const VisionVoice: React.FC<VisionVoiceProps> = ({ userId }) => {
   const [imageUrl, setImageUrl] = useState('');
   const [visionResult, setVisionResult] = useState<string | null>(null);
+  const [extractedMetrics, setExtractedMetrics] = useState<any[]>([]);
   const [loadingVision, setLoadingVision] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const [voiceText, setVoiceText] = useState('');
   const [voiceResult, setVoiceResult] = useState<string | null>(null);
   const [loadingVoice, setLoadingVoice] = useState(false);
   const [isListening, setIsListening] = useState(false);
+
+  const handleFileUpload = async (fileToUpload: File) => {
+    setLoadingVision(true);
+    setVisionResult(null);
+    setExtractedMetrics([]);
+    try {
+      const res = await uploadMedicalReportFile(userId, fileToUpload);
+      setVisionResult(res.analysis);
+      if (res.metrics) setExtractedMetrics(res.metrics);
+    } catch (err: any) {
+      console.error(err);
+      setVisionResult(`❌ Error processing report file: ${err.message || 'Server error'}`);
+    } finally {
+      setLoadingVision(false);
+    }
+  };
 
   const handleAnalyzeImage = async (e?: React.FormEvent, sampleUrl?: string) => {
     if (e) e.preventDefault();
@@ -22,6 +40,7 @@ export const VisionVoice: React.FC<VisionVoiceProps> = ({ userId }) => {
     if (!urlToUse.trim()) return;
     setLoadingVision(true);
     setVisionResult(null);
+    setExtractedMetrics([]);
     try {
       const res = await analyzeVisionImage(userId, urlToUse);
       setVisionResult(res.analysis);
@@ -83,7 +102,8 @@ export const VisionVoice: React.FC<VisionVoiceProps> = ({ userId }) => {
   const handleSpeakOutput = (text: string) => {
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
+      const cleanText = text.replace(/[*#_`]/g, '');
+      const utterance = new SpeechSynthesisUtterance(cleanText);
       utterance.rate = 1.0;
       window.speechSynthesis.speak(utterance);
     }
@@ -101,13 +121,13 @@ export const VisionVoice: React.FC<VisionVoiceProps> = ({ userId }) => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex items-center justify-between glass-panel p-6 rounded-2xl" style={{ border: '1px solid rgba(14,165,233,0.1)' }}>
         <div>
           <h2 className="text-xl font-extrabold text-white flex items-center gap-2" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
             <Eye className="w-6 h-6" style={{ color: '#0EA5E9' }} /> Vision & Voice Multimodal AI
           </h2>
-          <p className="text-xs mt-1" style={{ color: '#64748B' }}>Medical prescription / lab report image analyzer & hands-free voice query processor</p>
+          <p className="text-xs mt-1" style={{ color: '#64748B' }}>Medical PDF lab report scanner, prescription image analyzer & hands-free voice query processor</p>
         </div>
       </div>
 
@@ -118,10 +138,43 @@ export const VisionVoice: React.FC<VisionVoiceProps> = ({ userId }) => {
             <FileImage className="w-5 h-5" style={{ color: '#0EA5E9' }} /> Prescription & Lab Report Vision Analyzer
           </h3>
 
+          {/* Drag & Drop File Upload Box */}
+          <div className="p-5 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center text-center transition-all"
+            style={{ borderColor: 'rgba(14,165,233,0.3)', background: 'rgba(15,23,42,0.6)' }}
+          >
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-2" style={{ background: 'rgba(14,165,233,0.12)', color: '#0EA5E9' }}>
+              <Upload className="w-6 h-6" />
+            </div>
+            <p className="text-xs font-bold text-white">Upload Lab Report PDF or Medical Image</p>
+            <p className="text-[11px] mt-0.5" style={{ color: '#64748B' }}>Supports PDF, PNG, JPG, JPEG (CBC, Lipid Profile, Rx)</p>
+            
+            <label className="mt-3 px-4 py-2 rounded-xl text-xs font-extrabold btn-primary cursor-pointer">
+              <span>Choose File</span>
+              <input
+                type="file"
+                accept=".pdf,.png,.jpg,.jpeg"
+                className="hidden"
+                onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    const file = e.target.files[0];
+                    setSelectedFile(file);
+                    handleFileUpload(file);
+                  }
+                }}
+              />
+            </label>
+
+            {selectedFile && (
+              <div className="mt-2 text-xs font-semibold flex items-center gap-1.5" style={{ color: '#06D6A0' }}>
+                <FileText className="w-4 h-4" /> Loaded: {selectedFile.name}
+              </div>
+            )}
+          </div>
+
           {/* Sample Prescriptions Chips */}
-          <div className="space-y-2">
+          <div className="space-y-2 pt-1">
             <span className="text-xs font-semibold flex items-center gap-1" style={{ color: '#64748B' }}>
-              <Sparkles className="w-3.5 h-3.5" style={{ color: '#0EA5E9' }} /> Try Preset Examples:
+              <Sparkles className="w-3.5 h-3.5" style={{ color: '#0EA5E9' }} /> Or Try Preset Examples:
             </span>
             <div className="flex flex-wrap gap-2">
               {[
@@ -147,9 +200,9 @@ export const VisionVoice: React.FC<VisionVoiceProps> = ({ userId }) => {
             </div>
           </div>
 
-          <form onSubmit={handleAnalyzeImage} className="space-y-3 pt-2">
+          <form onSubmit={handleAnalyzeImage} className="space-y-3 pt-1">
             <div>
-              <label className="block text-xs font-semibold mb-1" style={{ color: '#94A3B8' }}>Image URL or Local Path</label>
+              <label className="block text-xs font-semibold mb-1" style={{ color: '#94A3B8' }}>Image URL / Remote Path</label>
               <input
                 type="text"
                 value={imageUrl}
@@ -163,16 +216,41 @@ export const VisionVoice: React.FC<VisionVoiceProps> = ({ userId }) => {
               disabled={loadingVision || !imageUrl.trim()}
               className="w-full py-2.5 rounded-xl btn-primary font-semibold text-xs disabled:opacity-50 cursor-pointer"
             >
-              {loadingVision ? 'Extracting Medical Text...' : 'Analyze Prescription Image'}
+              {loadingVision ? 'Scanning & Parsing Medical Report...' : 'Analyze URL Image'}
             </button>
           </form>
+
+          {/* Extracted Biomarker Cards */}
+          {extractedMetrics.length > 0 && (
+            <div className="space-y-2 pt-2">
+              <span className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5" style={{ color: '#0EA5E9' }}>
+                <Activity className="w-4 h-4" /> Extracted Telemetry Biomarkers (Auto-Synced to DB):
+              </span>
+              <div className="grid grid-cols-2 gap-2">
+                {extractedMetrics.map((m, idx) => (
+                  <div key={idx} className="p-3 rounded-xl" style={{ background: 'rgba(15,23,42,0.8)', border: '1px solid rgba(14,165,233,0.15)' }}>
+                    <p className="text-[11px] font-bold" style={{ color: '#94A3B8' }}>{m.metric_type}</p>
+                    <p className="text-sm font-extrabold text-white mt-0.5">
+                      {m.value}{m.value2 ? `/${m.value2}` : ''} <span className="text-[10px] font-normal" style={{ color: '#64748B' }}>{m.unit}</span>
+                    </p>
+                    <div className="mt-1 flex items-center gap-1 text-[10px] font-bold"
+                      style={{ color: m.status.toLowerCase().includes('high') || m.status.toLowerCase().includes('hyper') ? '#EF4444' : (m.status.toLowerCase().includes('elevat') ? '#F59E0B' : '#06D6A0') }}
+                    >
+                      {m.status.toLowerCase().includes('high') || m.status.toLowerCase().includes('hyper') ? <AlertTriangle className="w-3 h-3" /> : <CheckCircle2 className="w-3 h-3" />}
+                      <span>{m.status}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {visionResult && (
             <div className="p-4 rounded-xl text-xs whitespace-pre-wrap leading-relaxed space-y-2" style={{ background: 'rgba(15,23,42,0.7)', border: '1px solid rgba(14,165,233,0.12)', color: '#E2E8F0' }}>
               <div className="flex items-center justify-between font-bold text-[11px] uppercase tracking-wider mb-1" style={{ color: '#0EA5E9' }}>
-                <span>Vision AI Analysis Result</span>
+                <span>Vision & PDF Report Analysis</span>
                 <button onClick={() => handleSpeakOutput(visionResult)} className="flex items-center gap-1 text-[11px] font-bold cursor-pointer hover:underline" style={{ color: '#06D6A0' }}>
-                  <Volume2 className="w-3.5 h-3.5" /> Listen
+                  <Volume2 className="w-3.5 h-3.5" /> Listen Audio
                 </button>
               </div>
               {visionResult}
@@ -268,4 +346,5 @@ export const VisionVoice: React.FC<VisionVoiceProps> = ({ userId }) => {
     </div>
   );
 };
+
 

@@ -26,40 +26,61 @@ DRUG_INTERACTIONS = {
 
 
 @tool
-def check_medication_interactions(medications: list) -> str:
+def check_medication_interactions(medications: list, patient_allergies: str = "") -> str:
     """
-    Check if there are any known drug-drug interactions in a list of medications.
+    Check if there are any known drug-drug interactions or allergy contraindications in a list of medications.
 
     Args:
         medications: List of medication names (e.g. ['Aspirin', 'Warfarin']).
+        patient_allergies: Comma-separated patient known allergies (e.g. 'Penicillin, Aspirin').
 
     Returns:
-        Interaction analysis report.
+        Interaction and allergy safety report.
     """
-    if not medications or len(medications) < 2:
-        return "Please provide at least two medications to check for interactions."
+    if not medications:
+        return "Please provide medications to check for interactions or allergy contraindications."
 
     found_interactions = []
+    found_allergy_warnings = []
     meds_clean = [m.lower().strip() for m in medications]
 
-    # Check all pairs
-    for i in range(len(meds_clean)):
-        for j in range(i + 1, len(meds_clean)):
-            med1, med2 = meds_clean[i], meds_clean[j]
-            pair1 = (med1, med2)
-            pair2 = (med2, med1)
+    # 1. Allergy Cross-Checking Guardrail
+    if patient_allergies and patient_allergies.strip().lower() != "none":
+        allergies_list = [a.lower().strip() for a in patient_allergies.split(",")]
+        for med in meds_clean:
+            for alg in allergies_list:
+                if alg and alg in med:
+                    found_allergy_warnings.append(
+                        f"🛑 **CRITICAL PATIENT ALLERGY CONTRAINDICATION**: Patient has a recorded allergy to **'{alg.title()}'**, "
+                        f"which conflicts with prescribed/queried drug **'{med.title()}'**. Do NOT consume."
+                    )
 
-            interaction = DRUG_INTERACTIONS.get(pair1) or DRUG_INTERACTIONS.get(pair2)
-            if interaction:
-                found_interactions.append(f"- **{medications[i]}** + **{medications[j]}**:\n  {interaction}")
+    # 2. Pairwise Drug Interactions Check
+    if len(meds_clean) >= 2:
+        for i in range(len(meds_clean)):
+            for j in range(i + 1, len(meds_clean)):
+                med1, med2 = meds_clean[i], meds_clean[j]
+                pair1 = (med1, med2)
+                pair2 = (med2, med1)
 
-    # General MedlinePlus reference
-    footer = "\n\n*Note: This check is based on a clinical ruleset of common drugs. For a complete check, consult a pharmacist or visit https://medlineplus.gov/druginformation.html*"
+                interaction = DRUG_INTERACTIONS.get(pair1) or DRUG_INTERACTIONS.get(pair2)
+                if interaction:
+                    found_interactions.append(f"- **{medications[i]}** + **{medications[j]}**:\n  {interaction}")
+
+    footer = "\n\n*Note: This safety check is based on clinical rulesets. Always verify with a certified doctor or pharmacist.*"
+
+    res_parts = []
+    if found_allergy_warnings:
+        res_parts.append("🚨 **ALLERGY CONTRAINDICATION ALERTS:**\n\n" + "\n\n".join(found_allergy_warnings))
 
     if found_interactions:
-        return "⚠️ **Medication Interactions Detected:**\n\n" + "\n\n".join(found_interactions) + footer
+        res_parts.append("⚠️ **MEDICATION INTERACTIONS DETECTED:**\n\n" + "\n\n".join(found_interactions))
+
+    if res_parts:
+        return "\n\n".join(res_parts) + footer
     else:
-        return "✅ **No major interactions found** among the provided medications in our clinical ruleset.\n\n*Always verify with your doctor or pharmacist, as new interactions or personal health factors may apply.*" + footer
+        return "✅ **No major drug interactions or allergy contraindications found** for the specified list." + footer
+
 
 
 @tool

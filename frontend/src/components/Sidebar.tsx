@@ -22,6 +22,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
     { id: 'vision_voice', label: 'Vision & Voice AI', icon: Eye },
   ];
 
+
+
   return (
     <aside className="w-[270px] flex flex-col h-screen sticky top-0 z-30"
       style={{

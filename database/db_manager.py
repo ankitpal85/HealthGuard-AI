@@ -63,6 +63,9 @@ def init_db():
         cursor.execute("ALTER TABLE users ADD COLUMN password_hash TEXT")
     if "firebase_uid" not in existing_cols:
         cursor.execute("ALTER TABLE users ADD COLUMN firebase_uid TEXT")
+    if "allergies" not in existing_cols:
+        cursor.execute("ALTER TABLE users ADD COLUMN allergies TEXT DEFAULT 'None'")
+
 
     # ── Medications ───────────────────────────────────────────────────────
     cursor.execute("""
@@ -376,6 +379,18 @@ def update_user(user_id: int, **kwargs) -> bool:
     conn.commit()
     conn.close()
     return True
+
+
+def get_user_allergies(user_id: int) -> str:
+    user = get_user(user_id)
+    if user and user.get("allergies"):
+        return user["allergies"]
+    return "None"
+
+
+def update_user_allergies(user_id: int, allergies: str) -> bool:
+    return update_user(user_id, allergies=allergies.strip())
+
 
 
 # ────────────────────────────────────────────────────────────────────────────

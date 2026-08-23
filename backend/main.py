@@ -21,8 +21,11 @@ if BASE_DIR not in sys.path:
 
 load_dotenv()
 
+import io
 from database import db_manager as db
 import agents.health_agent as ha_module
+from utils.firebase_auth import firebase_sign_up, firebase_sign_in
+from utils.report_generator import generate_pdf_report_bytes
 from tools.clinical_tools import analyze_symptoms, run_risk_assessment_tool, generate_automated_report
 from tools.indian_health_tool import (
     search_indian_medication_tool,
@@ -30,7 +33,7 @@ from tools.indian_health_tool import (
     search_practo_doctors_tool,
     check_air_quality_tool
 )
-from tools.vision_voice_tool import analyze_medical_image_tool, process_voice_query_tool
+from tools.vision_voice_tool import analyze_medical_image_tool, process_voice_query_tool, parse_medical_report_file
 
 # Initialize Database on Server Startup
 db.init_db()
@@ -64,6 +67,33 @@ class UserCreate(BaseModel):
 class UserLogin(BaseModel):
     email_or_name: str
     password: Optional[str] = None
+
+class AuthRegisterRequest(BaseModel):
+    email: str
+    password: str
+    name: str = "User"
+    age: Optional[int] = 30
+    gender: Optional[str] = "Male"
+    blood_group: Optional[str] = "O+"
+
+class AuthLoginRequest(BaseModel):
+    email: str
+    password: str
+
+class AllergyUpdateRequest(BaseModel):
+    allergies: str
+
+class UserProfileUpdate(BaseModel):
+    name: Optional[str] = None
+    email: Optional[str] = None
+    age: Optional[int] = None
+    gender: Optional[str] = None
+    weight_kg: Optional[float] = None
+    height_cm: Optional[float] = None
+    blood_group: Optional[str] = None
+    allergies: Optional[str] = None
+
+
 
 class MedicationCreate(BaseModel):
     user_id: int
@@ -157,10 +187,42 @@ def health_check():
 
 # ── User & Auth Endpoints ─────────────────────────────────────────────────────
 
+@app.post("/api/auth/register")
+def auth_register(req: AuthRegisterRequest):
+    res = firebase_sign_up(
+        email=req.email,
+        password=req.password,
+        name=req.name,
+        age=req.age or 30,
+        gender=req.gender or "Male",
+        blood_group=req.blood_group or "O+"
+    )
+    if not res.get("success"):
+        raise HTTPException(status_code=400, detail=res.get("message", "Registration failed"))
+    return res
+
+@app.post("/api/auth/login")
+def auth_login(req: AuthLoginRequest):
+    res = firebase_sign_in(email=req.email, password=req.password)
+    if not res.get("success"):
+        raise HTTPException(status_code=401, detail=res.get("message", "Authentication failed"))
+    return res
+
+@app.get("/api/users/{user_id}/allergies")
+def get_allergies(user_id: int):
+    allergies = db.get_user_allergies(user_id)
+    return {"user_id": user_id, "allergies": allergies}
+
+@app.post("/api/users/{user_id}/allergies")
+def update_allergies(user_id: int, req: AllergyUpdateRequest):
+    db.update_user_allergies(user_id, req.allergies)
+    return {"success": True, "allergies": req.allergies}
+
 @app.get("/api/users")
 def get_users():
     users = db.get_all_users()
     return {"users": users}
+
 
 @app.get("/api/users/{user_id}")
 def get_user_profile(user_id: int):
@@ -168,6 +230,20 @@ def get_user_profile(user_id: int):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
+
+@app.put("/api/users/{user_id}")
+def update_user_profile(user_id: int, req: UserProfileUpdate):
+    user = db.get_user(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    update_data = {k: v for k, v in req.dict().items() if v is not None}
+    if update_data:
+        db.update_user(user_id, **update_data)
+    
+    updated_user = db.get_user(user_id)
+    return {"success": True, "user": updated_user}
+
 
 @app.post("/api/users")
 def create_user(user_data: UserCreate):
@@ -383,6 +459,19 @@ def api_generate_report(user_id: int = Query(...)):
     report = generate_automated_report.invoke({"patient_id": user_id, "patient_data": str(vitals)})
     return {"patient": user, "report": report}
 
+@app.get("/api/reports/download-pdf")
+def download_pdf_report(user_id: int = Query(...)):
+    pdf_bytes = generate_pdf_report_bytes(user_id)
+    user = db.get_user(user_id)
+    patient_name = (user.get("name") if user else "Patient").replace(" ", "_")
+    filename = f"HealthGuard_Clinical_Summary_{patient_name}.pdf"
+    return StreamingResponse(
+        io.BytesIO(pdf_bytes),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
+
 
 # ── Indian Health & AYUSH Endpoints ───────────────────────────────────────────
 
@@ -449,6 +538,12 @@ def add_caregiver(req: CaregiverRequest):
 
 # ── Vision & Voice AI Endpoints ───────────────────────────────────────────────
 
+@app.post("/api/vision/upload-report")
+async def upload_medical_report(user_id: int = Query(1), file: UploadFile = File(...)):
+    file_bytes = await file.read()
+    result = parse_medical_report_file(file_bytes, file.filename or "medical_report.pdf", user_id=user_id)
+    return result
+
 @app.post("/api/vision/analyze")
 async def analyze_vision_image(req: VisionRequest):
     res = analyze_medical_image_tool.invoke({"image_path": req.image_url, "prompt": req.prompt or "Analyze medical image"})
@@ -458,6 +553,7 @@ async def analyze_vision_image(req: VisionRequest):
 def process_voice(req: VoiceRequest):
     res = process_voice_query_tool.invoke({"voice_text": req.voice_text})
     return {"result": res}
+
 
 
 

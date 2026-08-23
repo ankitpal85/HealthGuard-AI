@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { searchIndianMeds, searchAyurveda, searchPractoDoctors, checkAQI } from '../services/api';
-import { MapPin, Search, Flower2, UserCheck, Wind, Sparkles } from 'lucide-react';
+import { MapPin, Search, Flower2, UserCheck, Wind } from 'lucide-react';
 
 export const IndianHealth: React.FC = () => {
   const [activeTab, setActiveTab] = useState('meds');

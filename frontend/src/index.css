@@ -120,3 +120,154 @@ body {
 input, select, textarea {
   font-family: 'Inter', sans-serif;
 }
+
+/* ═══════════════════════════════════════════════════════
+   PREMIUM ULTRA-LIGHT GLASSMORPHISM DESIGN SYSTEM
+   ═══════════════════════════════════════════════════════ */
+
+html.light-mode {
+  color-scheme: light;
+  --bg-deep: #F8FAFC;
+  --bg-surface: #FFFFFF;
+  --bg-card: rgba(255, 255, 255, 0.92);
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --border: rgba(14, 165, 233, 0.22);
+}
+
+html.light-mode body {
+  background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 35%, #F8FAFC 70%, #F5F3FF 100%);
+  color: #0F172A;
+  background-attachment: fixed;
+}
+
+html.light-mode .glass-panel {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(24px) saturate(1.9);
+  -webkit-backdrop-filter: blur(24px) saturate(1.9);
+  border: 1px solid rgba(14, 165, 233, 0.22);
+  box-shadow:
+    0 4px 24px -2px rgba(14, 165, 233, 0.1),
+    0 12px 36px -8px rgba(15, 23, 42, 0.05);
+}
+
+html.light-mode .glass-panel-hover:hover {
+  background: #FFFFFF;
+  border-color: rgba(14, 165, 233, 0.5);
+  box-shadow:
+    0 10px 36px -4px rgba(14, 165, 233, 0.22),
+    0 20px 50px -12px rgba(15, 23, 42, 0.08);
+}
+
+html.light-mode aside {
+  background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%) !important;
+  border-right: 1px solid rgba(14, 165, 233, 0.2) !important;
+  box-shadow: 4px 0 24px rgba(14, 165, 233, 0.05) !important;
+}
+
+html.light-mode header {
+  background: rgba(255, 255, 255, 0.85) !important;
+  border-bottom: 1px solid rgba(14, 165, 233, 0.2) !important;
+  backdrop-filter: blur(20px) !important;
+}
+
+html.light-mode h1,
+html.light-mode h2,
+html.light-mode h3,
+html.light-mode h4,
+html.light-mode .text-white {
+  color: #0F172A !important;
+}
+
+html.light-mode .text-slate-400,
+html.light-mode .text-slate-300,
+html.light-mode .text-slate-500 {
+  color: #334155 !important;
+}
+
+html.light-mode .text-slate-600 {
+  color: #475569 !important;
+}
+
+html.light-mode input,
+html.light-mode select,
+html.light-mode textarea {
+  background: #FFFFFF !important;
+  color: #0F172A !important;
+  border: 1px solid rgba(14, 165, 233, 0.3) !important;
+  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.04) !important;
+}
+
+html.light-mode input::placeholder,
+html.light-mode textarea::placeholder {
+  color: #94A3B8 !important;
+}
+
+/* Light Mode specific chat bubbles & cards */
+html.light-mode .bg-slate-900,
+html.light-mode .bg-slate-950,
+html.light-mode .bg-slate-900\/90,
+html.light-mode .bg-dark-900 {
+  background: #FFFFFF !important;
+  border-color: rgba(14, 165, 233, 0.2) !important;
+}
+
+html.light-mode .bg-slate-800,
+html.light-mode .bg-slate-800\/60 {
+  background: #F1F5F9 !important;
+  color: #0F172A !important;
+}
+
+/* ── Light Mode Card Action Buttons ────────────────── */
+.card-action-btn {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(14, 165, 233, 0.15);
+  color: #E2E8F0;
+}
+
+html.light-mode .card-action-btn {
+  background: linear-gradient(135deg, rgba(240, 249, 255, 0.95), rgba(224, 242, 254, 0.8)) !important;
+  border: 1px solid rgba(14, 165, 233, 0.3) !important;
+  color: #0284C7 !important;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.08) !important;
+  font-weight: 700 !important;
+}
+html.light-mode .card-action-btn:hover {
+  background: #FFFFFF !important;
+  border-color: rgba(14, 165, 233, 0.6) !important;
+  box-shadow: 0 6px 18px rgba(14, 165, 233, 0.18) !important;
+}
+
+/* ── Light Mode Sidebar High-Contrast Text Overrides ── */
+html.light-mode aside nav p {
+  color: #0284C7 !important;
+  font-weight: 800 !important;
+}
+
+html.light-mode aside nav button {
+  color: #334155 !important;
+  font-weight: 700 !important;
+}
+
+html.light-mode aside nav button:hover {
+  background: rgba(14, 165, 233, 0.1) !important;
+  color: #0284C7 !important;
+}
+
+html.light-mode aside nav button svg {
+  color: #475569 !important;
+}
+
+html.light-mode aside nav button:hover svg {
+  color: #0284C7 !important;
+}
+
+html.light-mode ::-webkit-scrollbar-track {
+  background: #F1F5F9;
+}
+html.light-mode ::-webkit-scrollbar-thumb {
+  background: rgba(14, 165, 233, 0.4);
+}
+
+
+
