@@ -14,10 +14,13 @@ from fastapi.responses import StreamingResponse, JSONResponse
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 
-# Ensure workspace root is in sys.path
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(BACKEND_DIR)
+if BACKEND_DIR not in sys.path:
+    sys.path.insert(0, BACKEND_DIR)
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
+
 
 load_dotenv()
 
