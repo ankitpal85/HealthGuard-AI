@@ -14,10 +14,13 @@ from fastapi.responses import StreamingResponse, JSONResponse
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 
-# Ensure workspace root is in sys.path
+# Ensure workspace root and backend dir are in sys.path
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
+if BACKEND_DIR not in sys.path:
+    sys.path.insert(0, BACKEND_DIR)
 
 load_dotenv()
 
@@ -557,15 +560,39 @@ def process_voice(req: VoiceRequest):
 
 
 
-# ── Settings Endpoint ─────────────────────────────────────────────────────────
+def _update_env_file(key: str, value: str):
+    env_path = os.path.join(BASE_DIR, ".env")
+    if not os.path.exists(env_path):
+        return
+    try:
+        with open(env_path, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+        found = False
+        new_lines = []
+        for line in lines:
+            if line.strip().startswith(f"{key}="):
+                new_lines.append(f"{key}={value}\n")
+                found = True
+            else:
+                new_lines.append(line)
+        if not found:
+            new_lines.append(f"{key}={value}\n")
+        with open(env_path, "w", encoding="utf-8") as f:
+            f.writelines(new_lines)
+    except Exception as e:
+        print(f"[WARN] Failed to update {key} in .env: {e}")
+
 
 @app.post("/api/settings")
 def update_settings(req: SettingsRequest):
     os.environ["LLM_PROVIDER"] = req.provider
+    _update_env_file("LLM_PROVIDER", req.provider)
     if req.provider == "gemini":
         os.environ["GOOGLE_API_KEY"] = req.api_key.strip()
+        _update_env_file("GOOGLE_API_KEY", req.api_key.strip())
     else:
         os.environ["OPENAI_API_KEY"] = req.api_key.strip()
+        _update_env_file("OPENAI_API_KEY", req.api_key.strip())
     return {"success": True, "provider": req.provider}
 
 
