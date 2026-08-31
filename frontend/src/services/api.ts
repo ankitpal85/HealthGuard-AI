@@ -234,7 +234,7 @@ export const sendChatMessage = async (userId: number, message: string): Promise<
   } catch (e) {
     return {
       role: 'assistant',
-      content: `🏥 **HealthGuard Clinical Engine (Offline Mode)**:\n\nThank you for your prompt: "${message}". I have recorded your health query. For clinical assessment, please keep vitals within range and consult your physician.`,
+      content: `🏥 **HealthGuard Clinical Engine (Offline Mode)**:\n\nFor clinical assessment, please keep vitals within range and consult your physician.`,
     };
   }
 };
