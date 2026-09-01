@@ -347,11 +347,24 @@ def get_user_by_email(email: str) -> Optional[dict]:
     return dict(row) if row else None
 
 
-def authenticate_user_db(email: str, password_hash: str) -> Optional[dict]:
+def get_user_by_email_or_name(identifier: str) -> Optional[dict]:
+    if not identifier:
+        return None
+    clean = identifier.strip().lower()
+    conn = get_connection()
+    row = conn.execute("SELECT * FROM users WHERE LOWER(email) = ? OR LOWER(name) = ?", (clean, clean)).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
+def authenticate_user_db(identifier: str, password_hash: str) -> Optional[dict]:
+    if not identifier:
+        return None
+    clean = identifier.strip().lower()
     conn = get_connection()
     row = conn.execute("""
-        SELECT * FROM users WHERE LOWER(email) = LOWER(?) AND password_hash = ?
-    """, (email.strip(), password_hash)).fetchone()
+        SELECT * FROM users WHERE (LOWER(email) = ? OR LOWER(name) = ?) AND password_hash = ?
+    """, (clean, clean, password_hash)).fetchone()
     conn.close()
     return dict(row) if row else None
 
@@ -649,8 +662,20 @@ def get_daily_macro_summary(user_id: int, days: int = 7) -> list:
         GROUP BY date(recorded_at)
         ORDER BY date DESC
     """, (user_id, f"-{days}")).fetchall()
+def delete_nutrition_log(log_id: int) -> bool:
+    conn = get_connection()
+    conn.execute("DELETE FROM nutrition_logs WHERE id = ?", (log_id,))
+    conn.commit()
     conn.close()
-    return [dict(r) for r in rows]
+    return True
+
+
+def delete_medication(med_id: int) -> bool:
+    conn = get_connection()
+    conn.execute("DELETE FROM medications WHERE id = ?", (med_id,))
+    conn.commit()
+    conn.close()
+    return True
 
 
 # ────────────────────────────────────────────────────────────────────────────

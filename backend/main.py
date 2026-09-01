@@ -212,6 +212,10 @@ def auth_login(req: AuthLoginRequest):
         raise HTTPException(status_code=401, detail=res.get("message", "Authentication failed"))
     return res
 
+@app.post("/api/auth/logout")
+def auth_logout():
+    return {"success": True, "message": "Successfully logged out from HealthGuard AI"}
+
 @app.get("/api/users/{user_id}/allergies")
 def get_allergies(user_id: int):
     allergies = db.get_user_allergies(user_id)
@@ -322,6 +326,11 @@ def log_medication(log: MedicationLogRequest):
     )
     return {"success": True}
 
+@app.delete("/api/medications/{med_id}")
+def delete_medication(med_id: int):
+    db.delete_medication(med_id)
+    return {"success": True, "deleted_id": med_id}
+
 @app.get("/api/medications/adherence")
 def get_medication_adherence(user_id: int = Query(...), days: int = Query(7)):
     rate = db.get_adherence_rate(user_id, days=days)
@@ -373,6 +382,12 @@ def log_nutrition(nutr: NutritionLogRequest):
     )
     return {"success": True, "log_id": log_id}
 
+@app.delete("/api/nutrition/{log_id}")
+def delete_nutrition_log(log_id: int):
+    db.delete_nutrition_log(log_id)
+    return {"success": True, "deleted_id": log_id}
+
+
 
 # ── AI Chatbot Endpoints ──────────────────────────────────────────────────────
 
@@ -410,33 +425,59 @@ from fastapi import BackgroundTasks
 
 @app.post("/api/chat/stream")
 async def chat_stream_ai(req: ChatRequest, background_tasks: BackgroundTasks):
-    """Zero-latency Server-Sent Events (SSE) Endpoint for real-time streaming."""
+    """True token-level SSE streaming using GOOGLE_API_KEY2 as primary LLM with guaranteed history persistence."""
     user_id = req.user_id
     prompt = req.message.strip()
 
     if not prompt:
         raise HTTPException(status_code=400, detail="Empty prompt")
 
-    background_tasks.add_task(db.save_chat_message, user_id, "user", prompt)
+    # Persist user message immediately
+    try:
+        db.save_chat_message(user_id, "user", prompt)
+    except Exception as dbe:
+        print(f"[WARN] Failed to save user chat message: {dbe}")
 
     async def event_generator():
-        history = db.get_chat_history(user_id, limit=4)
+        history = db.get_chat_history(user_id, limit=8)
+        full_response = []
+
         try:
-            agent, _ = ha_module.build_health_agent(user_id)
-            response_text = ha_module.chat_with_agent(agent, prompt, history)
-        except Exception:
-            response_text = ha_module.get_smart_health_response(prompt)
+            # True token-level streaming — each chunk yielded as Gemini produces it
+            async for token in ha_module.stream_chat_with_agent(prompt, history):
+                if token:
+                    full_response.append(token)
+                    # SSE format: each token sent immediately as it arrives
+                    yield f"data: {token}\n\n"
+        except Exception as e:
+            print(f"[WARN] Streaming error: {e}")
+            # Graceful fallback: generate full response and stream word-by-word
+            fallback = ha_module.get_smart_health_response(prompt)
+            full_response.append(fallback)
+            words = fallback.split(" ")
+            for i in range(0, len(words), 3):
+                chunk = " ".join(words[i:i+3]) + " "
+                yield f"data: {chunk}\n\n"
+                await asyncio.sleep(0.008)
 
-        background_tasks.add_task(db.save_chat_message, user_id, "assistant", response_text)
+        # Save complete assistant response directly to DB before closing connection
+        complete_text = "".join(full_response).strip()
+        if complete_text:
+            try:
+                db.save_chat_message(user_id, "assistant", complete_text)
+            except Exception as dbe:
+                print(f"[WARN] Failed to save assistant chat message: {dbe}")
 
-        words = response_text.split(" ")
-        for i in range(0, len(words), 2):
-            chunk = " ".join(words[i:i+2]) + " "
-            yield f"data: {chunk}\n\n"
-            await asyncio.sleep(0.005)
         yield "data: [DONE]\n\n"
 
-    return StreamingResponse(event_generator(), media_type="text/event-stream")
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",  # Disable nginx buffering for true streaming
+        }
+    )
 
 
 

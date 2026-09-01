@@ -1,34 +1,38 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&family=Geist:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 /* ═══════════════════════════════════════════════════════
-   HEALTHGUARD AI — Clinical Design System Tokens
-   Primary:    Medical Sky Blue  #0EA5E9
-   Secondary:  Clinical Mint     #06D6A0
-   Tertiary:   Soft Rose         #F472B6
-   Warning:    Warm Amber        #F59E0B
-   Emergency:  Medical Red       #EF4444
-   Background: Deep Navy         #0B1120
-   Surface:    Frosted Glass     rgba(15,23,42,0.6)
-   Font:       Plus Jakarta Sans (Headlines) / Inter (Body)
+   HEALTHGUARD AI — Ultimate SaaS & Clinical Design System
+   Primary:      Medical Sky Blue  #0EA5E9
+   Secondary:    Clinical Mint     #06D6A0
+   AI Violet:    Neon Violet       #8B5CF6
+   Warning:      Warm Amber        #F59E0B
+   Emergency:    Crimson Red       #EF4444
    ═══════════════════════════════════════════════════════ */
 
 :root {
   --primary: #0EA5E9;
   --primary-light: #38BDF8;
-  --primary-glow: rgba(14, 165, 233, 0.15);
+  --primary-glow: rgba(14, 165, 233, 0.2);
   --secondary: #06D6A0;
-  --secondary-glow: rgba(6, 214, 160, 0.15);
-  --tertiary: #F472B6;
-  --tertiary-glow: rgba(244, 114, 182, 0.15);
+  --secondary-glow: rgba(6, 214, 160, 0.2);
+  --ai-purple: #8B5CF6;
+  --ai-purple-glow: rgba(139, 92, 246, 0.2);
   --warning: #F59E0B;
+  --warning-glow: rgba(245, 158, 11, 0.2);
   --emergency: #EF4444;
-  --bg-deep: #0B1120;
+
+  --bg-deep: #070B14;
   --bg-surface: #0F172A;
-  --bg-card: rgba(15, 23, 42, 0.6);
+  --bg-card: rgba(15, 23, 42, 0.75);
+  --bg-sidebar: linear-gradient(180deg, #090E1A 0%, #060A14 100%);
+  --bg-header: rgba(9, 14, 26, 0.85);
+
   --text-primary: #F8FAFC;
   --text-secondary: #94A3B8;
-  --border: rgba(14, 165, 233, 0.12);
+  --text-muted: #64748B;
+  --border-color: rgba(14, 165, 233, 0.18);
+  --border-glow: rgba(14, 165, 233, 0.4);
 
   font-family: 'Inter', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   color-scheme: dark;
@@ -36,145 +40,297 @@
 
 body {
   margin: 0;
-  background: var(--bg-deep);
+  background-color: var(--bg-deep);
   color: var(--text-primary);
   min-height: 100vh;
   overflow-x: hidden;
-  /* Subtle clinical ambient glow */
+  /* Ambient glowing radial mesh background for Dark Mode */
   background-image:
-    radial-gradient(ellipse 80% 50% at 10% 0%, rgba(14, 165, 233, 0.08) 0px, transparent 60%),
-    radial-gradient(ellipse 60% 40% at 90% 10%, rgba(6, 214, 160, 0.06) 0px, transparent 50%),
-    radial-gradient(ellipse 50% 40% at 50% 100%, rgba(244, 114, 182, 0.04) 0px, transparent 50%);
+    radial-gradient(ellipse 90% 60% at 15% -10%, rgba(14, 165, 233, 0.15) 0px, transparent 65%),
+    radial-gradient(ellipse 70% 50% at 85% 15%, rgba(6, 214, 160, 0.12) 0px, transparent 55%),
+    radial-gradient(ellipse 60% 50% at 50% 100%, rgba(139, 92, 246, 0.08) 0px, transparent 50%);
+  background-attachment: fixed;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ── Light Mode Color System ───────────────────────── */
+html.light-mode {
+  color-scheme: light;
+  --bg-deep: #F8FAFC;
+  --bg-surface: #FFFFFF;
+  --bg-card: rgba(255, 255, 255, 0.95);
+  --bg-sidebar: linear-gradient(180deg, #FFFFFF 0%, #F1F5F9 100%);
+  --bg-header: rgba(255, 255, 255, 0.9);
+
+  --text-primary: #0F172A;
+  --text-secondary: #334155;
+  --text-muted: #64748B;
+  --border-color: rgba(14, 165, 233, 0.22);
+  --border-glow: rgba(14, 165, 233, 0.5);
+
+  --primary-glow: rgba(14, 165, 233, 0.12);
+  --secondary-glow: rgba(6, 214, 160, 0.12);
+  --ai-purple-glow: rgba(139, 92, 246, 0.12);
+}
+
+html.light-mode body {
+  background-color: #F8FAFC;
+  color: #0F172A;
+  /* Vibrant Sky & Soft Cyan Ambient Gradient for Light Mode */
+  background-image:
+    radial-gradient(ellipse 90% 60% at 20% -10%, rgba(14, 165, 233, 0.18) 0px, transparent 65%),
+    radial-gradient(ellipse 70% 50% at 80% 20%, rgba(6, 214, 160, 0.14) 0px, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 50% 100%, rgba(139, 92, 246, 0.08) 0px, transparent 50%);
   background-attachment: fixed;
 }
 
 /* ── Glass Panel System ─────────────────────────────── */
 .glass-panel {
   background: var(--bg-card);
-  backdrop-filter: blur(20px) saturate(1.6);
-  -webkit-backdrop-filter: blur(20px) saturate(1.6);
-  border: 1px solid var(--border);
-  border-radius: 16px;
+  backdrop-filter: blur(24px) saturate(1.8);
+  -webkit-backdrop-filter: blur(24px) saturate(1.8);
+  border: 1px solid var(--border-color);
+  border-radius: 24px;
   box-shadow:
-    0 1px 2px rgba(0,0,0,0.3),
-    0 8px 24px -8px rgba(0,0,0,0.4);
+    0 4px 20px -2px rgba(0, 0, 0, 0.25),
+    0 12px 32px -8px rgba(14, 165, 233, 0.1);
+  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, transform 0.25s ease;
 }
 
 .glass-panel-hover {
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .glass-panel-hover:hover {
-  background: rgba(15, 23, 42, 0.75);
-  border-color: rgba(14, 165, 233, 0.3);
+  border-color: var(--border-glow);
   box-shadow:
-    0 1px 2px rgba(0,0,0,0.3),
-    0 16px 48px -12px rgba(14, 165, 233, 0.12);
+    0 10px 36px -4px rgba(14, 165, 233, 0.2),
+    0 20px 48px -12px rgba(0, 0, 0, 0.3);
   transform: translateY(-2px);
 }
 
-/* ── Primary Action Button ──────────────────────────── */
-.btn-primary {
-  background: linear-gradient(135deg, #0EA5E9 0%, #06B6D4 100%);
-  color: #ffffff;
-  font-weight: 700;
-  border: none;
-  box-shadow: 0 4px 16px rgba(14, 165, 233, 0.3);
-  transition: all 0.2s ease;
-}
-.btn-primary:hover {
-  box-shadow: 0 6px 24px rgba(14, 165, 233, 0.45);
-  transform: translateY(-1px);
-  filter: brightness(1.08);
-}
-.btn-primary:active { transform: translateY(0); }
-
-/* ── Badge Glow System ──────────────────────────────── */
-.badge-sky {
-  background: var(--primary-glow);
-  color: var(--primary-light);
-  border: 1px solid rgba(14, 165, 233, 0.3);
-}
-.badge-mint {
-  background: var(--secondary-glow);
-  color: var(--secondary);
-  border: 1px solid rgba(6, 214, 160, 0.3);
-}
-.badge-rose {
-  background: var(--tertiary-glow);
-  color: var(--tertiary);
-  border: 1px solid rgba(244, 114, 182, 0.3);
-}
-.badge-amber {
-  background: rgba(245, 158, 11, 0.12);
-  color: var(--warning);
-  border: 1px solid rgba(245, 158, 11, 0.3);
-}
-
-/* ── Custom Scrollbar ───────────────────────────────── */
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: rgba(11, 17, 32, 0.8); }
-::-webkit-scrollbar-thumb { background: rgba(14, 165, 233, 0.3); border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(14, 165, 233, 0.6); }
-
-/* ── Form Inputs ────────────────────────────────────── */
-input, select, textarea {
-  font-family: 'Inter', sans-serif;
-}
-
-/* ═══════════════════════════════════════════════════════
-   PREMIUM ULTRA-LIGHT GLASSMORPHISM DESIGN SYSTEM
-   ═══════════════════════════════════════════════════════ */
-
-html.light-mode {
-  color-scheme: light;
-  --bg-deep: #F8FAFC;
-  --bg-surface: #FFFFFF;
-  --bg-card: rgba(255, 255, 255, 0.92);
-  --text-primary: #0F172A;
-  --text-secondary: #475569;
-  --border: rgba(14, 165, 233, 0.22);
-}
-
-html.light-mode body {
-  background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 35%, #F8FAFC 70%, #F5F3FF 100%);
-  color: #0F172A;
-  background-attachment: fixed;
-}
-
 html.light-mode .glass-panel {
-  background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(24px) saturate(1.9);
-  -webkit-backdrop-filter: blur(24px) saturate(1.9);
-  border: 1px solid rgba(14, 165, 233, 0.22);
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(14, 165, 233, 0.24);
   box-shadow:
     0 4px 24px -2px rgba(14, 165, 233, 0.1),
-    0 12px 36px -8px rgba(15, 23, 42, 0.05);
+    0 12px 36px -8px rgba(15, 23, 42, 0.06);
 }
 
 html.light-mode .glass-panel-hover:hover {
   background: #FFFFFF;
   border-color: rgba(14, 165, 233, 0.5);
   box-shadow:
-    0 10px 36px -4px rgba(14, 165, 233, 0.22),
-    0 20px 50px -12px rgba(15, 23, 42, 0.08);
+    0 12px 40px -4px rgba(14, 165, 233, 0.22),
+    0 24px 52px -12px rgba(15, 23, 42, 0.08);
 }
 
+/* ── Modern Buttons System ────────────────────────────── */
+.btn-primary {
+  background: linear-gradient(135deg, #0EA5E9 0%, #0284C7 100%);
+  color: #FFFFFF !important;
+  font-weight: 700;
+  border: none;
+  border-radius: 14px;
+  box-shadow: 0 4px 18px rgba(14, 165, 233, 0.4);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.btn-primary:hover {
+  box-shadow: 0 6px 26px rgba(14, 165, 233, 0.55);
+  transform: translateY(-1.5px) scale(1.02);
+  filter: brightness(1.08);
+}
+.btn-primary:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.btn-purple {
+  background: linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%);
+  color: #FFFFFF !important;
+  font-weight: 700;
+  border: none;
+  border-radius: 14px;
+  box-shadow: 0 4px 18px rgba(139, 92, 246, 0.4);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.btn-purple:hover {
+  box-shadow: 0 6px 26px rgba(139, 92, 246, 0.55);
+  transform: translateY(-1.5px) scale(1.02);
+  filter: brightness(1.08);
+}
+
+.btn-emerald {
+  background: linear-gradient(135deg, #06D6A0 0%, #10B981 100%);
+  color: #FFFFFF !important;
+  font-weight: 700;
+  border: none;
+  border-radius: 14px;
+  box-shadow: 0 4px 18px rgba(6, 214, 160, 0.4);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.btn-emerald:hover {
+  box-shadow: 0 6px 26px rgba(6, 214, 160, 0.55);
+  transform: translateY(-1.5px) scale(1.02);
+  filter: brightness(1.08);
+}
+
+.btn-secondary {
+  background: rgba(14, 165, 233, 0.12);
+  border: 1px solid rgba(14, 165, 233, 0.28);
+  color: #38BDF8;
+  font-weight: 700;
+  border-radius: 14px;
+  transition: all 0.2s ease;
+}
+.btn-secondary:hover {
+  background: rgba(14, 165, 233, 0.22);
+  border-color: rgba(14, 165, 233, 0.5);
+  color: #FFFFFF;
+  transform: translateY(-1px);
+}
+
+html.light-mode .btn-secondary {
+  background: rgba(14, 165, 233, 0.12);
+  border-color: rgba(14, 165, 233, 0.35);
+  color: #0284C7;
+}
+
+/* ── Card Action Buttons ────────────────────────────── */
+.card-action-btn {
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(14, 165, 233, 0.2);
+  color: #E2E8F0;
+  border-radius: 14px;
+  transition: all 0.2s ease;
+}
+.card-action-btn:hover {
+  background: rgba(14, 165, 233, 0.16);
+  border-color: rgba(14, 165, 233, 0.45);
+  color: #38BDF8;
+  transform: translateY(-1px);
+}
+
+html.light-mode .card-action-btn {
+  background: linear-gradient(135deg, rgba(240, 249, 255, 0.95), rgba(224, 242, 254, 0.85)) !important;
+  border: 1px solid rgba(14, 165, 233, 0.32) !important;
+  color: #0284C7 !important;
+  box-shadow: 0 4px 14px rgba(14, 165, 233, 0.1) !important;
+  font-weight: 700 !important;
+}
+html.light-mode .card-action-btn:hover {
+  background: #FFFFFF !important;
+  border-color: rgba(14, 165, 233, 0.65) !important;
+  box-shadow: 0 6px 20px rgba(14, 165, 233, 0.2) !important;
+  color: #0EA5E9 !important;
+}
+
+/* ── Prompt Chips System ────────────────────────────── */
+.prompt-chip {
+  background: rgba(14, 165, 233, 0.08);
+  border: 1px solid rgba(14, 165, 233, 0.2);
+  color: #38BDF8;
+  font-weight: 600;
+  border-radius: 12px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.prompt-chip:hover {
+  background: rgba(14, 165, 233, 0.2);
+  border-color: rgba(14, 165, 233, 0.5);
+  color: #FFFFFF;
+  transform: translateY(-1.5px);
+  box-shadow: 0 4px 14px rgba(14, 165, 233, 0.2);
+}
+
+html.light-mode .prompt-chip {
+  background: linear-gradient(135deg, rgba(224, 242, 254, 0.95), rgba(240, 249, 255, 0.9)) !important;
+  border: 1px solid rgba(14, 165, 233, 0.35) !important;
+  color: #0284C7 !important;
+  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.12) !important;
+  font-weight: 700 !important;
+}
+html.light-mode .prompt-chip:hover {
+  background: #FFFFFF !important;
+  border-color: rgba(14, 165, 233, 0.7) !important;
+  color: #0EA5E9 !important;
+  box-shadow: 0 6px 18px rgba(14, 165, 233, 0.22) !important;
+  transform: translateY(-1.5px) scale(1.02);
+}
+
+
+/* ── Badge System ──────────────────────────────── */
+.badge-sky {
+  background: var(--primary-glow);
+  color: #38BDF8;
+  border: 1px solid rgba(14, 165, 233, 0.35);
+}
+.badge-mint {
+  background: var(--secondary-glow);
+  color: #06D6A0;
+  border: 1px solid rgba(6, 214, 160, 0.35);
+}
+.badge-purple {
+  background: var(--ai-purple-glow);
+  color: #A855F7;
+  border: 1px solid rgba(139, 92, 246, 0.35);
+}
+.badge-amber {
+  background: var(--warning-glow);
+  color: #F59E0B;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+html.light-mode .badge-sky {
+  background: rgba(14, 165, 233, 0.14);
+  color: #0284C7;
+  border-color: rgba(14, 165, 233, 0.4);
+}
+html.light-mode .badge-mint {
+  background: rgba(6, 214, 160, 0.15);
+  color: #059669;
+  border-color: rgba(6, 214, 160, 0.4);
+}
+html.light-mode .badge-purple {
+  background: rgba(139, 92, 246, 0.15);
+  color: #7C3AED;
+  border-color: rgba(139, 92, 246, 0.4);
+}
+html.light-mode .badge-amber {
+  background: rgba(245, 158, 11, 0.15);
+  color: #D97706;
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+/* ── Sidebar & Header Overrides ────────────────── */
 html.light-mode aside {
-  background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%) !important;
-  border-right: 1px solid rgba(14, 165, 233, 0.2) !important;
-  box-shadow: 4px 0 24px rgba(14, 165, 233, 0.05) !important;
+  background: var(--bg-sidebar) !important;
+  border-right: 1px solid rgba(14, 165, 233, 0.22) !important;
+  box-shadow: 4px 0 24px rgba(14, 165, 233, 0.08) !important;
+}
+
+html.light-mode aside nav button {
+  color: #334155 !important;
+  font-weight: 700 !important;
+}
+html.light-mode aside nav button:hover {
+  background: rgba(14, 165, 233, 0.12) !important;
+  color: #0284C7 !important;
 }
 
 html.light-mode header {
-  background: rgba(255, 255, 255, 0.85) !important;
-  border-bottom: 1px solid rgba(14, 165, 233, 0.2) !important;
-  backdrop-filter: blur(20px) !important;
+  background: var(--bg-header) !important;
+  border-bottom: 1px solid rgba(14, 165, 233, 0.22) !important;
+  backdrop-filter: blur(24px) !important;
 }
 
+/* ── Typography Overrides ───────────────────── */
 html.light-mode h1,
 html.light-mode h2,
 html.light-mode h3,
 html.light-mode h4,
+html.light-mode h5,
+html.light-mode h6 {
+  color: #0F172A !important;
+}
+
 html.light-mode .text-white {
   color: #0F172A !important;
 }
@@ -185,8 +341,29 @@ html.light-mode .text-slate-500 {
   color: #334155 !important;
 }
 
-html.light-mode .text-slate-600 {
-  color: #475569 !important;
+/* Protected white text inside gradient buttons */
+html.light-mode .btn-primary,
+html.light-mode button.btn-primary,
+html.light-mode .btn-primary *,
+html.light-mode .btn-purple,
+html.light-mode button.btn-purple,
+html.light-mode .btn-purple *,
+html.light-mode .btn-emerald,
+html.light-mode button.btn-emerald,
+html.light-mode .btn-emerald * {
+  color: #FFFFFF !important;
+}
+
+/* ── Input & Form Control Rules ───────────────────── */
+input, select, textarea {
+  font-family: 'Inter', sans-serif;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: #0EA5E9 !important;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.25) !important;
 }
 
 html.light-mode input,
@@ -194,8 +371,8 @@ html.light-mode select,
 html.light-mode textarea {
   background: #FFFFFF !important;
   color: #0F172A !important;
-  border: 1px solid rgba(14, 165, 233, 0.3) !important;
-  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.04) !important;
+  border: 1px solid rgba(14, 165, 233, 0.35) !important;
+  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.06) !important;
 }
 
 html.light-mode input::placeholder,
@@ -203,71 +380,56 @@ html.light-mode textarea::placeholder {
   color: #94A3B8 !important;
 }
 
-/* Light Mode specific chat bubbles & cards */
+html.light-mode select option {
+  background: #FFFFFF !important;
+  color: #0F172A !important;
+}
+
+/* Light Mode cards fallback */
 html.light-mode .bg-slate-900,
 html.light-mode .bg-slate-950,
 html.light-mode .bg-slate-900\/90,
 html.light-mode .bg-dark-900 {
   background: #FFFFFF !important;
-  border-color: rgba(14, 165, 233, 0.2) !important;
-}
-
-html.light-mode .bg-slate-800,
-html.light-mode .bg-slate-800\/60 {
-  background: #F1F5F9 !important;
+  border-color: rgba(14, 165, 233, 0.22) !important;
   color: #0F172A !important;
 }
 
-/* ── Light Mode Card Action Buttons ────────────────── */
-.card-action-btn {
-  background: rgba(15, 23, 42, 0.7);
-  border: 1px solid rgba(14, 165, 233, 0.15);
-  color: #E2E8F0;
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
-
-html.light-mode .card-action-btn {
-  background: linear-gradient(135deg, rgba(240, 249, 255, 0.95), rgba(224, 242, 254, 0.8)) !important;
-  border: 1px solid rgba(14, 165, 233, 0.3) !important;
-  color: #0284C7 !important;
-  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.08) !important;
-  font-weight: 700 !important;
+::-webkit-scrollbar-track {
+  background: rgba(7, 11, 20, 0.8);
 }
-html.light-mode .card-action-btn:hover {
-  background: #FFFFFF !important;
-  border-color: rgba(14, 165, 233, 0.6) !important;
-  box-shadow: 0 6px 18px rgba(14, 165, 233, 0.18) !important;
+::-webkit-scrollbar-thumb {
+  background: rgba(14, 165, 233, 0.4);
+  border-radius: 99px;
 }
-
-/* ── Light Mode Sidebar High-Contrast Text Overrides ── */
-html.light-mode aside nav p {
-  color: #0284C7 !important;
-  font-weight: 800 !important;
-}
-
-html.light-mode aside nav button {
-  color: #334155 !important;
-  font-weight: 700 !important;
-}
-
-html.light-mode aside nav button:hover {
-  background: rgba(14, 165, 233, 0.1) !important;
-  color: #0284C7 !important;
-}
-
-html.light-mode aside nav button svg {
-  color: #475569 !important;
-}
-
-html.light-mode aside nav button:hover svg {
-  color: #0284C7 !important;
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(14, 165, 233, 0.65);
 }
 
 html.light-mode ::-webkit-scrollbar-track {
   background: #F1F5F9;
 }
 html.light-mode ::-webkit-scrollbar-thumb {
-  background: rgba(14, 165, 233, 0.4);
+  background: rgba(14, 165, 233, 0.45);
 }
+
+/* ── Form Inputs Defaults ───────────────────────────── */
+input, select, textarea {
+  font-family: 'Inter', sans-serif;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: #0EA5E9 !important;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.25) !important;
+}
+
 
 
 

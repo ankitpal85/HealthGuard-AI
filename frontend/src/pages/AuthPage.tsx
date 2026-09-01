@@ -3,12 +3,11 @@ import { Activity, Sparkles, Mail, Lock, User, ArrowRight, CheckCircle2, ShieldC
 import { loginUser, registerUser } from '../services/api';
 
 interface AuthPageProps {
-  users: any[];
+  users?: any[];
   onLoginSuccess: (userId: number, userObj?: any) => void;
-  onSkipToDashboard?: () => void;
 }
 
-export const AuthPage: React.FC<AuthPageProps> = ({ users, onLoginSuccess, onSkipToDashboard }) => {
+export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -49,7 +48,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ users, onLoginSuccess, onSki
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-dark-900" style={{ background: '#090D16' }}>
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden transition-colors duration-300">
       {/* Dynamic Background Glowing Orbs */}
       <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full blur-[140px] pointer-events-none opacity-20" style={{ background: 'radial-gradient(circle, #0EA5E9, transparent)' }} />
       <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full blur-[140px] pointer-events-none opacity-20" style={{ background: 'radial-gradient(circle, #06D6A0, transparent)' }} />
@@ -58,8 +57,9 @@ export const AuthPage: React.FC<AuthPageProps> = ({ users, onLoginSuccess, onSki
       <div className="max-w-4xl w-full grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10 animate-in fade-in zoom-in-95 duration-500">
         
         {/* Left Side: Product Showcase Card */}
-        <div className="glass-panel p-8 rounded-3xl flex flex-col justify-between relative overflow-hidden shadow-2xl"
-          style={{ background: 'linear-gradient(135deg, rgba(14,165,233,0.12) 0%, rgba(6,214,160,0.06) 100%)', border: '1px solid rgba(14,165,233,0.2)' }}
+        <div
+          className="glass-panel p-8 rounded-3xl flex flex-col justify-between relative overflow-hidden shadow-2xl"
+          style={{ background: 'linear-gradient(135deg, rgba(14,165,233,0.14) 0%, rgba(6,214,160,0.08) 100%)', border: '1px solid var(--border-color)' }}
         >
           <div className="space-y-6">
             <div className="flex items-center gap-3">
@@ -67,76 +67,62 @@ export const AuthPage: React.FC<AuthPageProps> = ({ users, onLoginSuccess, onSki
                 <Activity className="w-7 h-7 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-extrabold text-white tracking-tight" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>HealthGuard AI</h1>
-                <p className="text-xs font-semibold text-sky-400">Clinical Intelligence & Voice Monitoring</p>
+                <h1 className="text-2xl font-extrabold tracking-tight" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>HealthGuard AI</h1>
+                <p className="text-xs font-bold text-sky-500">Clinical Intelligence & Voice Monitoring</p>
               </div>
             </div>
 
             <div className="space-y-3 pt-2">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold" style={{ background: 'rgba(14,165,233,0.15)', border: '1px solid rgba(14,165,233,0.3)', color: '#38BDF8' }}>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold badge-sky">
                 <Sparkles className="w-3.5 h-3.5" /> Firebase Cloud & Salted SHA-256 Security
               </div>
-              <h2 className="text-3xl font-extrabold text-white leading-tight">
+              <h2 className="text-3xl font-extrabold leading-tight">
                 Empowering Patient Longevity with AI Medical Intelligence.
               </h2>
-              <p className="text-xs text-slate-400 leading-relaxed">
+              <p className="text-xs text-slate-400 dark:text-slate-600 leading-relaxed font-medium">
                 Securely log vitals, track 1mg Indian medicines, receive real-time voice consultations, and analyze diagnostic lab reports.
               </p>
             </div>
 
             <div className="space-y-2.5 pt-4">
-              <div className="flex items-center gap-3 p-3 rounded-2xl" style={{ background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(14,165,233,0.1)' }}>
-                <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
-                <span className="text-xs text-slate-300 font-semibold">End-to-End Encrypted Patient Data Isolation</span>
+              <div className="flex items-center gap-3 p-3 rounded-2xl border border-slate-700/30 bg-slate-900/40 dark:bg-slate-100/50">
+                <ShieldCheck className="w-5 h-5 text-emerald-500 shrink-0" />
+                <span className="text-xs font-semibold">End-to-End Encrypted Patient Data Isolation</span>
               </div>
 
-              <div className="flex items-center gap-3 p-3 rounded-2xl" style={{ background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(14,165,233,0.1)' }}>
-                <HeartPulse className="w-5 h-5 text-sky-400 shrink-0" />
-                <span className="text-xs text-slate-300 font-semibold">Predictive Cardiovascular & Diabetes Risk Scoring</span>
+              <div className="flex items-center gap-3 p-3 rounded-2xl border border-slate-700/30 bg-slate-900/40 dark:bg-slate-100/50">
+                <HeartPulse className="w-5 h-5 text-sky-500 shrink-0" />
+                <span className="text-xs font-semibold">Predictive Cardiovascular & Diabetes Risk Scoring</span>
               </div>
 
-              <div className="flex items-center gap-3 p-3 rounded-2xl" style={{ background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(14,165,233,0.1)' }}>
-                <Stethoscope className="w-5 h-5 text-pink-400 shrink-0" />
-                <span className="text-xs text-slate-300 font-semibold">Continuous Voice Mode & Diagnostic PDF Parser</span>
+              <div className="flex items-center gap-3 p-3 rounded-2xl border border-slate-700/30 bg-slate-900/40 dark:bg-slate-100/50">
+                <Stethoscope className="w-5 h-5 text-pink-500 shrink-0" />
+                <span className="text-xs font-semibold">Continuous Voice Mode & Diagnostic PDF Parser</span>
               </div>
             </div>
           </div>
 
-          {/* Quick Switching Demo Account List */}
-          {users.length > 0 && (
-            <div className="pt-6 border-t border-slate-800/60 mt-6">
-              <p className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mb-2.5">
-                ⚡ Quick Switch Registered Demo Accounts:
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {users.slice(0, 4).map((u) => (
-                  <button
-                    key={u.id}
-                    type="button"
-                    onClick={() => onLoginSuccess(u.id, u)}
-                    className="px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer hover:scale-105"
-                    style={{ background: 'rgba(14,165,233,0.12)', border: '1px solid rgba(14,165,233,0.25)', color: '#38BDF8' }}
-                  >
-                    👤 {u.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+          {/* Security Assurance Footer */}
+          <div className="pt-6 border-t border-slate-700/30 mt-6">
+            <p className="text-xs font-medium text-slate-400 text-center">
+              🔒 Protected by 256-bit Salted SHA-256 Encryption & Medical Data Isolation.
+            </p>
+          </div>
         </div>
 
         {/* Right Side: Auth Form */}
-        <div className="glass-panel p-8 rounded-3xl flex flex-col justify-between relative shadow-2xl"
-          style={{ background: 'rgba(15,23,42,0.85)', border: '1px solid rgba(14,165,233,0.2)' }}
+        <div
+          className="glass-panel p-8 rounded-3xl flex flex-col justify-between relative shadow-2xl"
+          style={{ border: '1px solid var(--border-color)' }}
         >
           <div>
             {/* Header Tabs */}
-            <div className="flex items-center justify-between p-1 rounded-2xl mb-6" style={{ background: 'rgba(15,23,42,0.9)', border: '1px solid rgba(14,165,233,0.15)' }}>
+            <div className="flex items-center justify-between p-1 rounded-2xl mb-6 bg-slate-900/40 border border-slate-700/30">
               <button
                 type="button"
                 onClick={() => setMode('login')}
                 className={`flex-1 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
-                  mode === 'login' ? 'btn-primary text-white shadow-lg' : 'text-slate-400 hover:text-white'
+                  mode === 'login' ? 'btn-primary shadow-lg' : 'text-slate-400 hover:text-sky-500'
                 }`}
               >
                 Sign In
@@ -263,18 +249,6 @@ export const AuthPage: React.FC<AuthPageProps> = ({ users, onLoginSuccess, onSki
                 <ArrowRight className="w-4 h-4" />
               </button>
             </form>
-          </div>
-
-          <div className="pt-4 text-center">
-            {onSkipToDashboard && (
-              <button
-                type="button"
-                onClick={onSkipToDashboard}
-                className="text-xs font-semibold text-slate-400 hover:text-sky-400 transition-colors cursor-pointer"
-              >
-                Skip Authentication & Continue as Guest →
-              </button>
-            )}
           </div>
         </div>
       </div>

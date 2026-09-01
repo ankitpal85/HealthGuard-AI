@@ -76,9 +76,8 @@ export const Analytics: React.FC<AnalyticsProps> = ({ userId }) => {
   };
 
   const inputStyle = {
-    background: 'rgba(15,23,42,0.8)',
-    border: '1px solid rgba(14,165,233,0.15)',
-    color: '#F8FAFC',
+    background: 'var(--bg-card)',
+    border: '1px solid var(--border-color)',
     borderRadius: '12px',
     padding: '10px 14px',
     fontSize: '14px',
@@ -88,17 +87,17 @@ export const Analytics: React.FC<AnalyticsProps> = ({ userId }) => {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="flex flex-wrap items-center justify-between glass-panel p-6 rounded-2xl gap-4" style={{ border: '1px solid rgba(14,165,233,0.1)' }}>
+      <div className="flex flex-wrap items-center justify-between glass-panel p-6 rounded-2xl gap-4" style={{ border: '1px solid var(--border-color)' }}>
         <div>
-          <h2 className="text-xl font-extrabold text-white flex items-center gap-2" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-            <TrendingUp className="w-6 h-6" style={{ color: '#0EA5E9' }} /> Clinical Analytics & Risk Predictors
+          <h2 className="text-xl font-extrabold flex items-center gap-2" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+            <TrendingUp className="w-6 h-6 text-sky-500" /> Clinical Analytics & Risk Predictors
           </h2>
-          <p className="text-xs mt-1" style={{ color: '#64748B' }}>Run AI symptom checker, predictive disease risk models, and generate comprehensive medical reports</p>
+          <p className="text-xs font-semibold mt-1" style={{ color: '#64748B' }}>Run AI symptom checker, predictive disease risk models, and generate comprehensive medical reports</p>
         </div>
 
         <button
           onClick={() => downloadDoctorPdfReport(userId)}
-          className="px-5 py-2.5 rounded-xl font-extrabold text-xs text-white transition-all shadow-lg flex items-center gap-2 cursor-pointer"
+          className="px-5 py-2.5 rounded-xl font-extrabold text-xs text-white transition-all shadow-lg flex items-center gap-2 cursor-pointer hover:scale-105"
           style={{ background: 'linear-gradient(135deg, #06D6A0, #0EA5E9)', boxShadow: '0 6px 20px rgba(6,214,160,0.25)' }}
         >
           <Download className="w-4 h-4" />
@@ -106,18 +105,17 @@ export const Analytics: React.FC<AnalyticsProps> = ({ userId }) => {
         </button>
       </div>
 
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Symptom Checker Tool */}
         <div className="glass-panel glass-panel-hover p-6 space-y-4">
-          <h3 className="font-bold text-white text-sm flex items-center gap-2" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-            <Stethoscope className="w-5 h-5" style={{ color: '#0EA5E9' }} /> AI Symptom Triage & Analysis
+          <h3 className="font-extrabold text-sm flex items-center gap-2" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+            <Stethoscope className="w-5 h-5 text-sky-500" /> AI Symptom Triage & Analysis
           </h3>
 
           {/* Sample Symptom Chips */}
           <div className="space-y-1.5">
             <span className="text-xs font-semibold flex items-center gap-1" style={{ color: '#64748B' }}>
-              <Sparkles className="w-3.5 h-3.5" style={{ color: '#0EA5E9' }} /> Common Symptom Sets:
+              <Sparkles className="w-3.5 h-3.5 text-sky-500" /> Common Symptom Sets:
             </span>
             <div className="flex flex-wrap gap-2">
               {[
@@ -129,8 +127,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ userId }) => {
                   key={idx}
                   type="button"
                   onClick={() => { setSymptoms(symStr); handleAnalyzeSymptoms(undefined, symStr); }}
-                  className="px-2.5 py-1 rounded-lg text-xs font-semibold cursor-pointer transition-all"
-                  style={{ background: 'rgba(14,165,233,0.08)', border: '1px solid rgba(14,165,233,0.2)', color: '#38BDF8' }}
+                  className="px-2.5 py-1 rounded-lg text-xs font-bold cursor-pointer transition-all hover:scale-105 badge-sky"
                 >
                   "{symStr}"
                 </button>
@@ -140,7 +137,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ userId }) => {
 
           <form onSubmit={handleAnalyzeSymptoms} className="space-y-3 pt-1">
             <div>
-              <label className="block text-xs font-semibold mb-1" style={{ color: '#94A3B8' }}>Enter Symptoms (comma separated)</label>
+              <label className="block text-xs font-semibold mb-1" style={{ color: '#64748B' }}>Enter Symptoms (comma separated)</label>
               <input
                 type="text"
                 value={symptoms}
@@ -152,15 +149,17 @@ export const Analytics: React.FC<AnalyticsProps> = ({ userId }) => {
             <button
               type="submit"
               disabled={loadingSymptoms || !symptoms.trim()}
-              className="w-full py-2.5 rounded-xl btn-primary font-semibold text-xs disabled:opacity-50 cursor-pointer"
+              className="w-full py-2.5 rounded-xl btn-primary font-bold text-xs disabled:opacity-50 cursor-pointer shadow-md"
             >
               {loadingSymptoms ? 'Analyzing Symptoms...' : 'Analyze Symptoms'}
             </button>
           </form>
 
           {symptomResult && (
-            <div className="p-4 rounded-xl text-xs whitespace-pre-wrap leading-relaxed"
-              style={{ background: 'rgba(15,23,42,0.7)', border: '1px solid rgba(14,165,233,0.12)', color: '#E2E8F0' }}>
+            <div
+              className="p-4 rounded-xl text-xs whitespace-pre-wrap leading-relaxed font-medium"
+              style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
+            >
               {symptomResult}
             </div>
           )}
@@ -168,12 +167,12 @@ export const Analytics: React.FC<AnalyticsProps> = ({ userId }) => {
 
         {/* Predictive Risk Model */}
         <div className="glass-panel glass-panel-hover p-6 space-y-4">
-          <h3 className="font-bold text-white text-sm flex items-center gap-2" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-            <AlertTriangle className="w-5 h-5" style={{ color: '#F59E0B' }} /> Disease Risk Assessment
+          <h3 className="font-extrabold text-sm flex items-center gap-2" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+            <AlertTriangle className="w-5 h-5 text-amber-500" /> Disease Risk Assessment
           </h3>
           <form onSubmit={handleRunRisk} className="space-y-3">
             <div>
-              <label className="block text-xs font-semibold mb-1" style={{ color: '#94A3B8' }}>Target Medical Condition</label>
+              <label className="block text-xs font-semibold mb-1" style={{ color: '#64748B' }}>Target Medical Condition</label>
               <select
                 value={condition}
                 onChange={(e) => setCondition(e.target.value)}
@@ -188,16 +187,18 @@ export const Analytics: React.FC<AnalyticsProps> = ({ userId }) => {
             <button
               type="submit"
               disabled={loadingRisk}
-              className="w-full py-2.5 rounded-xl font-semibold text-xs disabled:opacity-50 text-white cursor-pointer"
-              style={{ background: 'linear-gradient(135deg, #F59E0B, #0EA5E9)', boxShadow: '0 4px 16px rgba(245,158,11,0.2)' }}
+              className="w-full py-2.5 rounded-xl font-bold text-xs disabled:opacity-50 text-white cursor-pointer shadow-md"
+              style={{ background: 'linear-gradient(135deg, #F59E0B, #0EA5E9)', boxShadow: '0 4px 16px rgba(245,158,11,0.25)' }}
             >
               {loadingRisk ? 'Calculating Risk Scores...' : 'Run Risk Assessment'}
             </button>
           </form>
 
           {riskResult && (
-            <div className="p-4 rounded-xl text-xs whitespace-pre-wrap leading-relaxed"
-              style={{ background: 'rgba(15,23,42,0.7)', border: '1px solid rgba(245,158,11,0.15)', color: '#E2E8F0' }}>
+            <div
+              className="p-4 rounded-xl text-xs whitespace-pre-wrap leading-relaxed font-medium"
+              style={{ background: 'var(--bg-card)', border: '1px solid rgba(245,158,11,0.25)' }}
+            >
               {riskResult}
             </div>
           )}
@@ -205,19 +206,19 @@ export const Analytics: React.FC<AnalyticsProps> = ({ userId }) => {
       </div>
 
       {/* Automated Report Generator */}
-      <div className="glass-panel p-6 rounded-2xl space-y-4" style={{ border: '1px solid rgba(6,214,160,0.1)' }}>
+      <div className="glass-panel p-6 rounded-2xl space-y-4" style={{ border: '1px solid var(--border-color)' }}>
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="font-bold text-white text-sm flex items-center gap-2" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-              <FileText className="w-5 h-5" style={{ color: '#06D6A0' }} /> Automated Clinical Summary Generator
+            <h3 className="font-extrabold text-sm flex items-center gap-2" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+              <FileText className="w-5 h-5 text-emerald-500" /> Automated Clinical Summary Generator
             </h3>
-            <p className="text-xs mt-1" style={{ color: '#64748B' }}>Generates a comprehensive clinical summary report for doctor consultations</p>
+            <p className="text-xs font-semibold mt-1" style={{ color: '#64748B' }}>Generates a comprehensive clinical summary report for doctor consultations</p>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={handleGenerateReport}
               disabled={loadingReport}
-              className="px-4 py-2.5 rounded-xl text-white font-semibold text-xs flex items-center gap-2 disabled:opacity-50 transition-all cursor-pointer"
+              className="px-4 py-2.5 rounded-xl text-white font-extrabold text-xs flex items-center gap-2 disabled:opacity-50 transition-all cursor-pointer shadow-md hover:scale-105"
               style={{ background: 'linear-gradient(135deg, #06D6A0, #14B8A6)', boxShadow: '0 4px 16px rgba(6,214,160,0.25)' }}
             >
               <Download className="w-4 h-4" /> {loadingReport ? 'Generating...' : 'Generate Full Report'}
@@ -225,8 +226,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ userId }) => {
             {reportResult && (
               <button
                 onClick={handleDownloadReportFile}
-                className="px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
-                style={{ background: 'rgba(15,23,42,0.8)', border: '1px solid rgba(6,214,160,0.3)', color: '#06D6A0' }}
+                className="px-3.5 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer card-action-btn"
               >
                 💾 Save .md File
               </button>
@@ -235,8 +235,10 @@ export const Analytics: React.FC<AnalyticsProps> = ({ userId }) => {
         </div>
 
         {reportResult && (
-          <div className="p-4 rounded-xl text-xs whitespace-pre-wrap leading-relaxed"
-            style={{ background: 'rgba(15,23,42,0.7)', border: '1px solid rgba(6,214,160,0.12)', color: '#E2E8F0' }}>
+          <div
+            className="p-4 rounded-xl text-xs whitespace-pre-wrap leading-relaxed font-medium"
+            style={{ background: 'var(--bg-card)', border: '1px solid rgba(6,214,160,0.2)' }}
+          >
             {reportResult}
           </div>
         )}

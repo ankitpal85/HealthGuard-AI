@@ -236,10 +236,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({ userId }) => {
           <button
             key={idx}
             onClick={() => handleSend(q)}
-            className="shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer"
-            style={{ background: 'rgba(15,23,42,0.7)', border: '1px solid rgba(14,165,233,0.1)', color: '#94A3B8' }}
-            onMouseEnter={(e) => { (e.currentTarget).style.borderColor = 'rgba(14,165,233,0.35)'; (e.currentTarget).style.background = 'rgba(14,165,233,0.08)'; (e.currentTarget).style.color = '#38BDF8'; }}
-            onMouseLeave={(e) => { (e.currentTarget).style.borderColor = 'rgba(14,165,233,0.1)'; (e.currentTarget).style.background = 'rgba(15,23,42,0.7)'; (e.currentTarget).style.color = '#94A3B8'; }}
+            className="shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer prompt-chip"
           >
             {q}
           </button>
@@ -265,10 +262,10 @@ export const Chatbot: React.FC<ChatbotProps> = ({ userId }) => {
 
             <div className="relative group max-w-[78%]">
               <div
-                className="p-4 px-5 rounded-2xl text-xs sm:text-sm leading-relaxed whitespace-pre-wrap shadow-md"
+                className="p-4 px-5 rounded-2xl text-xs sm:text-sm leading-relaxed whitespace-pre-wrap shadow-md font-medium"
                 style={m.role === 'user'
-                  ? { background: 'linear-gradient(135deg, #0EA5E9, #0284C7)', color: '#ffffff', borderBottomRightRadius: '6px', boxShadow: '0 4px 16px rgba(14,165,233,0.2)' }
-                  : { background: 'rgba(15,23,42,0.8)', border: '1px solid rgba(14,165,233,0.08)', color: '#E2E8F0', borderBottomLeftRadius: '6px' }
+                  ? { background: 'linear-gradient(135deg, #0EA5E9, #0284C7)', color: '#ffffff', borderBottomRightRadius: '6px', boxShadow: '0 4px 16px rgba(14,165,233,0.25)' }
+                  : { background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderBottomLeftRadius: '6px' }
                 }
               >
                 {m.content}
@@ -298,7 +295,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({ userId }) => {
         ))}
 
         {loading && (
-          <div className="flex items-center gap-3 text-xs font-semibold italic pl-2" style={{ color: '#64748B' }}>
+          <div className="flex items-center gap-3 text-xs font-semibold italic pl-2 text-sky-500">
             <div className="w-7 h-7 rounded-xl flex items-center justify-center animate-pulse" style={{ background: 'rgba(14,165,233,0.15)' }}>
               <Loader2 className="w-4 h-4 animate-spin" style={{ color: '#0EA5E9' }} />
             </div>
@@ -315,7 +312,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({ userId }) => {
           handleSend();
         }}
         className="flex items-center gap-2 glass-panel p-2.5 px-3 rounded-2xl shadow-2xl"
-        style={{ border: isListening ? '1px solid #06D6A0' : '1px solid rgba(14,165,233,0.15)' }}
+        style={{ border: isListening ? '1px solid #06D6A0' : '1px solid var(--border-color)' }}
       >
         <button
           type="button"
@@ -336,8 +333,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({ userId }) => {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder={isListening ? '🎤 Listening... Speak your health query...' : 'Ask anything about symptoms, 1mg medicine prices, or AYUSH herbs...'}
-          className="flex-1 bg-transparent border-none text-sm px-2 focus:outline-none font-medium"
-          style={{ color: '#F8FAFC' }}
+          className="flex-1 bg-transparent border-none text-sm px-2 focus:outline-none font-medium text-slate-900 dark:text-slate-100"
         />
 
         <button

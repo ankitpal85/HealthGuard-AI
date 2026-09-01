@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { fetchNutritionLogs, logNutrition } from '../services/api';
-import { UtensilsCrossed, Plus, Droplet, Flame, Sparkles } from 'lucide-react';
+import { fetchNutritionLogs, logNutrition, deleteNutritionLog } from '../services/api';
+import { UtensilsCrossed, Plus, Droplet, Flame, Sparkles, Trash2 } from 'lucide-react';
 
 interface NutritionProps {
   userId: number;
@@ -39,6 +39,16 @@ export const Nutrition: React.FC<NutritionProps> = ({ userId }) => {
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  const handleDeleteNutrition = async (logId: number, foodName: string) => {
+    try {
+      await deleteNutritionLog(logId, userId);
+      showToast(`🗑️ Removed meal: ${foodName}`);
+      loadNutrition();
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const handleQuickWater = async (amountMl: number) => {
@@ -83,9 +93,8 @@ export const Nutrition: React.FC<NutritionProps> = ({ userId }) => {
   };
 
   const inputStyle = {
-    background: 'rgba(15,23,42,0.8)',
-    border: '1px solid rgba(14,165,233,0.15)',
-    color: '#F8FAFC',
+    background: 'var(--bg-card)',
+    border: '1px solid var(--border-color)',
     borderRadius: '12px',
     padding: '10px 14px',
     fontSize: '14px',
@@ -97,22 +106,24 @@ export const Nutrition: React.FC<NutritionProps> = ({ userId }) => {
     <div className="space-y-6 relative">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed top-6 right-6 z-50 px-4 py-3 rounded-xl shadow-2xl font-bold text-xs flex items-center gap-2 animate-in fade-in"
-          style={{ background: '#F59E0B', color: '#0F172A', boxShadow: '0 8px 24px rgba(245,158,11,0.3)' }}>
+        <div
+          className="fixed top-6 right-6 z-50 px-4 py-3 rounded-xl shadow-2xl font-bold text-xs flex items-center gap-2 animate-in fade-in"
+          style={{ background: '#F59E0B', color: '#0F172A', boxShadow: '0 8px 24px rgba(245,158,11,0.3)' }}
+        >
           {toastMessage}
         </div>
       )}
 
-      <div className="flex items-center justify-between glass-panel p-6 rounded-2xl" style={{ border: '1px solid rgba(14,165,233,0.1)' }}>
+      <div className="flex items-center justify-between glass-panel p-6 rounded-2xl" style={{ border: '1px solid var(--border-color)' }}>
         <div>
-          <h2 className="text-xl font-extrabold text-white flex items-center gap-2" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-            <UtensilsCrossed className="w-6 h-6" style={{ color: '#F59E0B' }} /> Nutrition & Diet Intelligence
+          <h2 className="text-xl font-extrabold flex items-center gap-2" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+            <UtensilsCrossed className="w-6 h-6 text-amber-500" /> Nutrition & Diet Intelligence
           </h2>
-          <p className="text-xs mt-1" style={{ color: '#64748B' }}>Track daily meals, calories, macro breakdowns, and hydration goals</p>
+          <p className="text-xs font-semibold mt-1" style={{ color: '#64748B' }}>Track daily meals, calories, macro breakdowns, and hydration goals</p>
         </div>
         <button
           onClick={() => setShowLogModal(true)}
-          className="btn-primary px-4 py-2.5 rounded-xl font-semibold text-xs flex items-center gap-2 cursor-pointer"
+          className="btn-primary px-4 py-2.5 rounded-xl font-extrabold text-xs flex items-center gap-2 cursor-pointer hover:scale-105 shadow-md"
         >
           <Plus className="w-4 h-4" /> Log Meal / Water
         </button>
@@ -121,58 +132,70 @@ export const Nutrition: React.FC<NutritionProps> = ({ userId }) => {
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="glass-panel glass-panel-hover p-5 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)' }}>
-            <Flame className="w-6 h-6" style={{ color: '#F59E0B' }} />
+          <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.25)' }}>
+            <Flame className="w-6 h-6 text-amber-500" />
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase" style={{ color: '#64748B' }}>Daily Calories</p>
-            <h3 className="text-2xl font-extrabold text-white" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>1,850 <span className="text-xs font-normal" style={{ color: '#64748B' }}>/ 2,200 kcal</span></h3>
+            <p className="text-xs font-bold uppercase tracking-wider" style={{ color: '#64748B' }}>Daily Calories</p>
+            <h3 className="text-2xl font-extrabold" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>1,850 <span className="text-xs font-normal" style={{ color: '#64748B' }}>/ 2,200 kcal</span></h3>
           </div>
         </div>
 
         <div className="glass-panel glass-panel-hover p-5 flex flex-col justify-between space-y-3">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0" style={{ background: 'rgba(14,165,233,0.1)', border: '1px solid rgba(14,165,233,0.2)' }}>
-              <Droplet className="w-6 h-6" style={{ color: '#0EA5E9' }} />
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0" style={{ background: 'rgba(14,165,233,0.12)', border: '1px solid rgba(14,165,233,0.25)' }}>
+              <Droplet className="w-6 h-6 text-sky-500" />
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase" style={{ color: '#64748B' }}>Water Intake</p>
-              <h3 className="text-2xl font-extrabold text-white" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>{waterTotal} <span className="text-xs font-normal" style={{ color: '#64748B' }}>/ 3,000 ml</span></h3>
+              <p className="text-xs font-bold uppercase tracking-wider" style={{ color: '#64748B' }}>Water Intake</p>
+              <h3 className="text-2xl font-extrabold" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>{waterTotal} <span className="text-xs font-normal" style={{ color: '#64748B' }}>/ 3,000 ml</span></h3>
             </div>
           </div>
           <div className="flex items-center gap-2 pt-1">
-            <button onClick={() => handleQuickWater(250)} className="px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer" style={{ background: 'rgba(14,165,233,0.12)', color: '#38BDF8', border: '1px solid rgba(14,165,233,0.2)' }}>+250ml Glass</button>
-            <button onClick={() => handleQuickWater(500)} className="px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer" style={{ background: 'rgba(14,165,233,0.12)', color: '#38BDF8', border: '1px solid rgba(14,165,233,0.2)' }}>+500ml Bottle</button>
+            <button onClick={() => handleQuickWater(250)} className="px-2.5 py-1 rounded-lg text-xs font-extrabold transition-all cursor-pointer badge-sky">+250ml Glass</button>
+            <button onClick={() => handleQuickWater(500)} className="px-2.5 py-1 rounded-lg text-xs font-extrabold transition-all cursor-pointer badge-sky">+500ml Bottle</button>
           </div>
         </div>
 
         <div className="glass-panel glass-panel-hover p-5 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(6,214,160,0.1)', border: '1px solid rgba(6,214,160,0.2)' }}>
-            <UtensilsCrossed className="w-6 h-6" style={{ color: '#06D6A0' }} />
+          <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(6,214,160,0.12)', border: '1px solid rgba(6,214,160,0.25)' }}>
+            <UtensilsCrossed className="w-6 h-6 text-emerald-500" />
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase" style={{ color: '#64748B' }}>Macro Split</p>
-            <h3 className="text-sm font-bold text-white">P: 65g • C: 210g • F: 45g</h3>
+            <p className="text-xs font-bold uppercase tracking-wider" style={{ color: '#64748B' }}>Macro Split</p>
+            <h3 className="text-sm font-extrabold">P: 65g • C: 210g • F: 45g</h3>
           </div>
         </div>
       </div>
 
       {/* Logs Table */}
       <div className="glass-panel p-6 rounded-2xl space-y-4">
-        <h3 className="font-bold text-white text-sm" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Logged Meals History</h3>
+        <h3 className="font-extrabold text-sm" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Logged Meals History</h3>
         {logs.length === 0 ? (
-          <p className="text-xs italic" style={{ color: '#64748B' }}>No meals logged for today.</p>
+          <p className="text-xs italic font-medium" style={{ color: '#64748B' }}>No meals logged for today.</p>
         ) : (
           <div className="space-y-2">
             {logs.map((l: any, i: number) => (
-              <div key={i} className="flex items-center justify-between p-3 rounded-xl text-xs"
-                style={{ background: 'rgba(15,23,42,0.5)', border: '1px solid rgba(14,165,233,0.06)' }}>
+              <div
+                key={i}
+                className="flex items-center justify-between p-3 rounded-xl text-xs font-medium"
+                style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
+              >
                 <div>
-                  <span className="font-bold" style={{ color: '#0EA5E9' }}>{l.meal_type}:</span>{' '}
-                  <span className="font-medium text-white">{l.food_items}</span>
+                  <span className="font-bold text-sky-500">{l.meal_type}:</span>{' '}
+                  <span className="font-semibold">{l.food_items}</span>
                 </div>
-                <div className="font-semibold" style={{ color: '#64748B' }}>
-                  {l.calories} kcal
+                <div className="flex items-center gap-3">
+                  <span className="font-bold" style={{ color: '#64748B' }}>
+                    {l.calories} kcal
+                  </span>
+                  <button
+                    onClick={() => handleDeleteNutrition(l.id || i, l.food_items)}
+                    className="p-1.5 rounded-xl transition-all cursor-pointer text-red-500 hover:bg-red-500/15"
+                    title="Delete Meal Log"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
                 </div>
               </div>
             ))}
@@ -182,9 +205,9 @@ export const Nutrition: React.FC<NutritionProps> = ({ userId }) => {
 
       {/* Modal */}
       {showLogModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="w-full max-w-md rounded-2xl p-6 shadow-2xl" style={{ background: '#0F172A', border: '1px solid rgba(14,165,233,0.15)' }}>
-            <h3 className="text-lg font-bold text-white mb-3" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Log Meal / Nutrition</h3>
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
+          <div className="w-full max-w-md glass-panel p-6 shadow-2xl" style={{ border: '1px solid var(--border-color)' }}>
+            <h3 className="text-lg font-bold mb-3" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Log Meal / Nutrition</h3>
 
             {/* Presets */}
             <div className="space-y-1.5 mb-3">
