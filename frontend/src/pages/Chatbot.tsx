@@ -59,7 +59,8 @@ export const Chatbot: React.FC<ChatbotProps> = ({ userId }) => {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:8000/api/chat/stream', {
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${baseUrl}/api/chat/stream`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: userId, message: text }),
