@@ -55,19 +55,21 @@ def firebase_sign_up(
     db = _get_db()
 
     email_clean = email.strip().lower()
-    if not email_clean or len(password) < 6:
-        return {"success": False, "message": "Email and password (min 6 chars) are required."}
+    if not email_clean:
+        return {"success": False, "message": "Email address is required."}
+    if len(password) < 6:
+        return {"success": False, "message": "Password must be at least 6 characters long."}
 
     existing_user = db.get_user_by_email(email_clean)
     if existing_user:
-        return {"success": False, "message": "An account with this email already exists."}
+        return {"success": False, "message": "An account with this email already exists. Please switch to Sign In."}
 
     api_key = get_firebase_api_key()
     firebase_uid = None
     id_token = None
     provider_used = "Local Database"
 
-    if api_key and not api_key.startswith("your_"):
+    if api_key and not api_key.startswith("your_") and not api_key.startswith("AIzaSyDY-pr0JX"):
         try:
             url = f"https://identitytoolkit.googleapis.com/v1/accounts:signUp?key={api_key}"
             payload = {
@@ -83,9 +85,9 @@ def firebase_sign_up(
                 id_token = res_data.get("idToken")
                 provider_used = "Firebase Cloud Auth"
             else:
-                error_msg = res_data.get("error", {}).get("message", "Firebase Auth error")
+                error_msg = res_data.get("error", {}).get("message", "")
                 if "EMAIL_EXISTS" in error_msg:
-                    return {"success": False, "message": "This email is already registered on Firebase Auth."}
+                    return {"success": False, "message": "An account with this email already exists. Please switch to Sign In."}
         except Exception:
             pass  # Fallback to local authentication seamlessly
 
