@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Search, Activity, Sun, Moon, LogOut, AlertCircle, X, ShieldAlert, Settings, Save, CheckCircle2, User as UserIcon } from 'lucide-react';
-import { fetchUserProfile, updateUserProfile, fetchUserAllergies, updateUserAllergies } from '../services/api';
+import { fetchUserProfile, updateUserProfile, fetchUserAllergies, updateUserAllergies, type AuthSession } from '../services/api';
 
 interface HeaderProps {
   activeTab?: string;
   currentUserId?: number;
   users?: any[];
+  authSession?: AuthSession | null;
   onSelectUser?: (id: number) => void;
   onNavigate?: (tab: string) => void;
   onLogout?: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ activeTab = 'dashboard', currentUserId = 1, users = [], onSelectUser, onNavigate, onLogout }) => {
+export const Header: React.FC<HeaderProps> = ({ activeTab = 'dashboard', currentUserId = 1, users = [], authSession: _authSession, onSelectUser, onNavigate, onLogout }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
@@ -135,16 +137,18 @@ export const Header: React.FC<HeaderProps> = ({ activeTab = 'dashboard', current
   const { label, subtitle } = titles[activeTab] || titles.dashboard;
 
   return (
-    <header className="flex items-center justify-between px-8 py-5 relative" style={{ borderBottom: '1px solid rgba(14,165,233,0.08)' }}>
+    <header className="flex items-center justify-between px-8 py-5 relative transition-colors duration-300" style={{ borderBottom: '1px solid var(--border-color)' }}>
       <div>
-        <h2 className="text-xl font-extrabold tracking-tight text-white flex items-center gap-2.5" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-          <span className="w-8 h-8 rounded-lg flex items-center justify-center"
-            style={{ background: 'rgba(14,165,233,0.12)', border: '1px solid rgba(14,165,233,0.2)' }}>
-            <Activity className="w-4 h-4" style={{ color: '#0EA5E9' }} />
+        <h2 className="text-xl font-extrabold tracking-tight flex items-center gap-2.5" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+          <span
+            className="w-8 h-8 rounded-xl flex items-center justify-center shadow-sm"
+            style={{ background: 'rgba(14,165,233,0.15)', border: '1px solid rgba(14,165,233,0.3)' }}
+          >
+            <Activity className="w-4.5 h-4.5 text-sky-500" />
           </span>
-          {label}
+          <span className="bg-gradient-to-r from-sky-500 via-teal-500 to-emerald-500 bg-clip-text text-transparent">{label}</span>
         </h2>
-        <p className="text-xs font-medium mt-1 ml-[42px]" style={{ color: '#64748B' }}>{subtitle}</p>
+        <p className="text-xs font-semibold mt-1 ml-[42px]" style={{ color: '#64748B' }}>{subtitle}</p>
       </div>
 
       <div className="flex items-center gap-3">
@@ -159,14 +163,13 @@ export const Header: React.FC<HeaderProps> = ({ activeTab = 'dashboard', current
             className="pl-10 pr-4 py-2 rounded-xl text-[13px] font-medium focus:outline-none transition-all duration-200"
             style={{
               width: '190px',
-              background: 'rgba(15,23,42,0.6)',
-              border: '1px solid rgba(14,165,233,0.15)',
-              color: '#F8FAFC',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-color)',
             }}
             onFocus={(e) => {
               setIsSearchFocused(true);
-              e.target.style.borderColor = 'rgba(14,165,233,0.4)';
-              e.target.style.boxShadow = '0 0 16px rgba(14,165,233,0.1)';
+              e.target.style.borderColor = 'rgba(14,165,233,0.5)';
+              e.target.style.boxShadow = '0 0 16px rgba(14,165,233,0.15)';
             }}
             onBlur={() => {
               setTimeout(() => setIsSearchFocused(false), 200);
@@ -175,8 +178,10 @@ export const Header: React.FC<HeaderProps> = ({ activeTab = 'dashboard', current
 
           {/* Search Dropdown */}
           {isSearchFocused && filteredModules.length > 0 && (
-            <div className="absolute top-12 left-0 right-0 z-50 rounded-xl p-2 shadow-2xl space-y-1 animate-in fade-in"
-              style={{ background: '#0F172A', border: '1px solid rgba(14,165,233,0.2)' }}>
+            <div
+              className="absolute top-12 left-0 right-0 z-50 rounded-xl p-2 shadow-2xl space-y-1 animate-in fade-in glass-panel"
+              style={{ border: '1px solid var(--border-color)' }}
+            >
               {filteredModules.map((m) => (
                 <button
                   key={m.id}
@@ -187,10 +192,9 @@ export const Header: React.FC<HeaderProps> = ({ activeTab = 'dashboard', current
                     setIsSearchFocused(false);
                   }}
                   className="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold hover:bg-sky-500/10 flex items-center justify-between cursor-pointer"
-                  style={{ color: '#E2E8F0' }}
                 >
-                  <span>{m.label}</span>
-                  <span className="text-[10px] uppercase font-bold text-sky-400">{m.category}</span>
+                  <span className="font-bold">{m.label}</span>
+                  <span className="text-[10px] uppercase font-bold text-sky-500">{m.category}</span>
                 </button>
               ))}
             </div>
@@ -201,8 +205,8 @@ export const Header: React.FC<HeaderProps> = ({ activeTab = 'dashboard', current
         <button
           type="button"
           onClick={toggleTheme}
-          className="w-9 h-9 rounded-xl flex items-center justify-center transition-all cursor-pointer hover:border-sky-500/40"
-          style={{ background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(14,165,233,0.15)', color: isDarkMode ? '#F59E0B' : '#0EA5E9' }}
+          className="w-9 h-9 rounded-xl flex items-center justify-center transition-all cursor-pointer hover:scale-105"
+          style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: isDarkMode ? '#F59E0B' : '#0EA5E9' }}
           title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
         >
           {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
@@ -221,185 +225,202 @@ export const Header: React.FC<HeaderProps> = ({ activeTab = 'dashboard', current
           <span>Patient Settings</span>
         </button>
 
+
         {/* User Selector Dropdown */}
         {users.length > 0 && onSelectUser && (
           <select
             value={currentUserId}
             onChange={(e) => onSelectUser(Number(e.target.value))}
             className="px-3 py-2 rounded-xl text-xs font-bold focus:outline-none cursor-pointer"
-            style={{ background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(14,165,233,0.15)', color: '#F8FAFC' }}
+            style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
           >
             {users.map((u) => (
-              <option key={u.id} value={u.id} style={{ background: '#0F172A', color: '#F8FAFC' }}>
+              <option key={u.id} value={u.id}>
                 👤 {u.name}
               </option>
             ))}
           </select>
         )}
+
+        {/* Direct Logout Button */}
+        {onLogout && (
+          <button
+            type="button"
+            onClick={onLogout}
+            className="w-9 h-9 rounded-xl flex items-center justify-center transition-all cursor-pointer hover:bg-red-600/20 hover:border-red-500/40"
+            style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', color: '#EF4444' }}
+            title="Sign Out"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
       {/* Settings & Profile Modal */}
-      {showSettingsModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-in fade-in">
-          <div className="glass-panel p-7 rounded-3xl max-w-lg w-full relative space-y-5 shadow-2xl" style={{ border: '1px solid rgba(14,165,233,0.25)' }}>
-            <button
-              onClick={() => setShowSettingsModal(false)}
-              className="absolute right-5 top-5 p-1.5 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-white cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
+      {showSettingsModal &&
+        createPortal(
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in">
+            <div className="p-7 rounded-3xl max-w-lg w-full relative space-y-5 shadow-2xl bg-slate-900 border border-sky-500/30 text-white animate-in zoom-in-95 duration-200">
+              <button
+                type="button"
+                onClick={() => setShowSettingsModal(false)}
+                className="absolute right-5 top-5 p-1.5 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-white cursor-pointer transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
 
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(14,165,233,0.15)', border: '1px solid rgba(14,165,233,0.3)', color: '#38BDF8' }}>
-                <UserIcon className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-xl font-extrabold text-white">Patient Profile & Clinical Settings</h3>
-                <p className="text-xs text-slate-400">View and edit personal health parameters & allergies.</p>
-              </div>
-            </div>
-
-            {settingsError && (
-              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-semibold flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0" /> {settingsError}
-              </div>
-            )}
-
-            {settingsSuccess && (
-              <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 shrink-0" /> {settingsSuccess}
-              </div>
-            )}
-
-            <form onSubmit={handleSaveSettings} className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-sky-500/20 border border-sky-500/40 text-sky-400">
+                  <UserIcon className="w-5 h-5" />
+                </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">Full Name</label>
+                  <h3 className="text-xl font-extrabold text-white">Patient Profile & Clinical Settings</h3>
+                  <p className="text-xs text-slate-400">View and edit personal health parameters & allergies.</p>
+                </div>
+              </div>
+
+              {settingsError && (
+                <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-semibold flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" /> {settingsError}
+                </div>
+              )}
+
+              {settingsSuccess && (
+                <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 shrink-0" /> {settingsSuccess}
+                </div>
+              )}
+
+              <form onSubmit={handleSaveSettings} className="space-y-4 max-h-[65vh] overflow-y-auto pr-1">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 mb-1">Full Name</label>
+                    <input
+                      type="text"
+                      required
+                      value={profileName}
+                      onChange={(e) => setProfileName(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs font-medium focus:outline-none focus:border-sky-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 mb-1">Email Address</label>
+                    <input
+                      type="email"
+                      required
+                      value={profileEmail}
+                      onChange={(e) => setProfileEmail(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs font-medium focus:outline-none focus:border-sky-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 mb-1">Age</label>
+                    <input
+                      type="number"
+                      value={profileAge}
+                      onChange={(e) => setProfileAge(Number(e.target.value))}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs font-medium focus:outline-none focus:border-sky-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 mb-1">Gender</label>
+                    <select
+                      value={profileGender}
+                      onChange={(e) => setProfileGender(e.target.value)}
+                      className="w-full px-2.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs font-medium focus:outline-none focus:border-sky-500"
+                    >
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 mb-1">Blood Group</label>
+                    <select
+                      value={profileBloodGroup}
+                      onChange={(e) => setProfileBloodGroup(e.target.value)}
+                      className="w-full px-2.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs font-medium focus:outline-none focus:border-sky-500"
+                    >
+                      <option value="O+">O+</option>
+                      <option value="A+">A+</option>
+                      <option value="B+">B+</option>
+                      <option value="AB+">AB+</option>
+                      <option value="O-">O-</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 mb-1">Weight (kg)</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={profileWeight}
+                      onChange={(e) => setProfileWeight(Number(e.target.value))}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs font-medium focus:outline-none focus:border-sky-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 mb-1">Height (cm)</label>
+                    <input
+                      type="number"
+                      value={profileHeight}
+                      onChange={(e) => setProfileHeight(Number(e.target.value))}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs font-medium focus:outline-none focus:border-sky-500"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 mb-1 flex items-center gap-1">
+                    <ShieldAlert className="w-3.5 h-3.5 text-red-400" /> Known Allergies (e.g. Penicillin, Aspirin)
+                  </label>
                   <input
                     type="text"
-                    required
-                    value={profileName}
-                    onChange={(e) => setProfileName(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-medium focus:outline-none focus:border-sky-500"
+                    value={profileAllergies}
+                    onChange={(e) => setProfileAllergies(e.target.value)}
+                    placeholder="Penicillin, Aspirin, Sulfa"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs font-medium focus:outline-none focus:border-red-500"
                   />
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">Email Address</label>
-                  <input
-                    type="email"
-                    required
-                    value={profileEmail}
-                    onChange={(e) => setProfileEmail(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-medium focus:outline-none focus:border-sky-500"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">Age</label>
-                  <input
-                    type="number"
-                    value={profileAge}
-                    onChange={(e) => setProfileAge(Number(e.target.value))}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-medium focus:outline-none focus:border-sky-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">Gender</label>
-                  <select
-                    value={profileGender}
-                    onChange={(e) => setProfileGender(e.target.value)}
-                    className="w-full px-2 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-medium focus:outline-none focus:border-sky-500"
-                  >
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">Blood Group</label>
-                  <select
-                    value={profileBloodGroup}
-                    onChange={(e) => setProfileBloodGroup(e.target.value)}
-                    className="w-full px-2 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-medium focus:outline-none focus:border-sky-500"
-                  >
-                    <option value="O+">O+</option>
-                    <option value="A+">A+</option>
-                    <option value="B+">B+</option>
-                    <option value="AB+">AB+</option>
-                    <option value="O-">O-</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">Weight (kg)</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={profileWeight}
-                    onChange={(e) => setProfileWeight(Number(e.target.value))}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-medium focus:outline-none focus:border-sky-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">Height (cm)</label>
-                  <input
-                    type="number"
-                    value={profileHeight}
-                    onChange={(e) => setProfileHeight(Number(e.target.value))}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-medium focus:outline-none focus:border-sky-500"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1 flex items-center gap-1">
-                  <ShieldAlert className="w-3.5 h-3.5 text-red-400" /> Known Allergies (e.g. Penicillin, Aspirin)
-                </label>
-                <input
-                  type="text"
-                  value={profileAllergies}
-                  onChange={(e) => setProfileAllergies(e.target.value)}
-                  placeholder="Penicillin, Aspirin, Sulfa"
-                  className="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-medium focus:outline-none focus:border-red-500"
-                />
-              </div>
-
-              <div className="pt-2 flex items-center justify-between gap-3">
-                <button
-                  type="submit"
-                  disabled={savingSettings}
-                  className="flex-1 py-3 rounded-xl btn-primary font-extrabold text-xs shadow-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-                >
-                  <Save className="w-4 h-4" />
-                  <span>{savingSettings ? 'Saving...' : 'Save Profile Changes'}</span>
-                </button>
-
-                {onLogout && (
+                <div className="pt-2 flex items-center justify-between gap-3">
                   <button
-                    type="button"
-                    onClick={() => {
-                      setShowSettingsModal(false);
-                      onLogout();
-                    }}
-                    className="px-4 py-3 rounded-xl font-extrabold text-xs text-white bg-red-600 hover:bg-red-700 transition-all flex items-center gap-1.5 cursor-pointer shadow-lg"
+                    type="submit"
+                    disabled={savingSettings}
+                    className="flex-1 py-3 rounded-xl btn-primary font-extrabold text-xs shadow-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                   >
-                    <LogOut className="w-4 h-4" />
-                    <span>Sign Out</span>
+                    <Save className="w-4 h-4" />
+                    <span>{savingSettings ? 'Saving...' : 'Save Profile Changes'}</span>
                   </button>
-                )}
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+
+                  {onLogout && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowSettingsModal(false);
+                        onLogout();
+                      }}
+                      className="px-4 py-3 rounded-xl font-extrabold text-xs text-white bg-red-600 hover:bg-red-700 transition-all flex items-center gap-1.5 cursor-pointer shadow-lg"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      <span>Sign Out</span>
+                    </button>
+                  )}
+                </div>
+              </form>
+            </div>
+          </div>,
+          document.body
+        )}
     </header>
   );
 };

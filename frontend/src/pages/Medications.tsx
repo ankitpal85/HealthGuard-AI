@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { fetchMedications, addMedication, logMedicationTaken } from '../services/api';
-import { Pill, Plus, Check, Clock, Sparkles } from 'lucide-react';
+import { fetchMedications, addMedication, logMedicationTaken, deleteMedication } from '../services/api';
+import { Pill, Plus, Check, Clock, Sparkles, Trash2 } from 'lucide-react';
 
 interface MedicationsProps {
   userId: number;
@@ -44,6 +44,16 @@ export const Medications: React.FC<MedicationsProps> = ({ userId }) => {
     setTimeout(() => setToastMessage(null), 3000);
   };
 
+  const handleDeleteMedication = async (medId: number, medName: string) => {
+    try {
+      await deleteMedication(medId, userId);
+      showToast(`🗑️ Removed ${medName} from prescriptions`);
+      loadMeds();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const handleAddMedication = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -83,9 +93,8 @@ export const Medications: React.FC<MedicationsProps> = ({ userId }) => {
   };
 
   const inputStyle = {
-    background: 'rgba(15,23,42,0.8)',
-    border: '1px solid rgba(14,165,233,0.15)',
-    color: '#F8FAFC',
+    background: 'var(--bg-card)',
+    border: '1px solid var(--border-color)',
     borderRadius: '12px',
     padding: '10px 14px',
     fontSize: '14px',
@@ -97,23 +106,25 @@ export const Medications: React.FC<MedicationsProps> = ({ userId }) => {
     <div className="space-y-6 relative">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed top-6 right-6 z-50 px-4 py-3 rounded-xl shadow-2xl font-bold text-xs flex items-center gap-2 animate-in fade-in"
-          style={{ background: '#06D6A0', color: '#0F172A', boxShadow: '0 8px 24px rgba(6,214,160,0.3)' }}>
+        <div
+          className="fixed top-6 right-6 z-50 px-4 py-3 rounded-xl shadow-2xl font-bold text-xs flex items-center gap-2 animate-in fade-in"
+          style={{ background: '#06D6A0', color: '#0F172A', boxShadow: '0 8px 24px rgba(6,214,160,0.3)' }}
+        >
           {toastMessage}
         </div>
       )}
 
       {/* Header */}
-      <div className="flex items-center justify-between glass-panel p-6 rounded-2xl" style={{ border: '1px solid rgba(14,165,233,0.1)' }}>
+      <div className="flex items-center justify-between glass-panel p-6 rounded-2xl" style={{ border: '1px solid var(--border-color)' }}>
         <div>
-          <h2 className="text-xl font-extrabold text-white flex items-center gap-2" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-            <Pill className="w-6 h-6" style={{ color: '#0EA5E9' }} /> Medication Tracker & Reminder Engine
+          <h2 className="text-xl font-extrabold flex items-center gap-2" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+            <Pill className="w-6 h-6 text-sky-500" /> Medication Tracker & Reminder Engine
           </h2>
-          <p className="text-xs mt-1" style={{ color: '#64748B' }}>Manage active prescriptions, daily time slots, and log dosage adherence</p>
+          <p className="text-xs font-semibold mt-1" style={{ color: '#64748B' }}>Manage active prescriptions, daily time slots, and log dosage adherence</p>
         </div>
         <button
           onClick={() => setShowAddModal(true)}
-          className="btn-primary px-4 py-2.5 rounded-xl font-semibold text-xs flex items-center gap-2 cursor-pointer"
+          className="btn-primary px-4 py-2.5 rounded-xl font-semibold text-xs flex items-center gap-2 cursor-pointer hover:scale-105 shadow-md"
         >
           <Plus className="w-4 h-4" /> Add Medication
         </button>
@@ -121,15 +132,15 @@ export const Medications: React.FC<MedicationsProps> = ({ userId }) => {
 
       {/* Medication Cards List */}
       {loading ? (
-        <div className="text-center py-12" style={{ color: '#64748B' }}>Loading medications schedule...</div>
+        <div className="text-center py-12 font-semibold" style={{ color: '#64748B' }}>Loading medications schedule...</div>
       ) : meds.length === 0 ? (
-        <div className="glass-panel p-12 text-center" style={{ color: '#64748B' }}>
-          <Pill className="w-12 h-12 mx-auto mb-3" style={{ color: '#475569' }} />
-          <p className="font-semibold" style={{ color: '#94A3B8' }}>No active medications added yet.</p>
-          <p className="text-xs mt-1 mb-4">Click "Add Medication" to configure your daily pill reminders.</p>
+        <div className="glass-panel p-12 text-center">
+          <Pill className="w-12 h-12 mx-auto mb-3" style={{ color: '#64748B' }} />
+          <p className="font-bold text-sm">No active medications added yet.</p>
+          <p className="text-xs mt-1 mb-4" style={{ color: '#64748B' }}>Click "Add Medication" to configure your daily pill reminders.</p>
           <button
             onClick={() => setShowAddModal(true)}
-            className="btn-primary px-4 py-2 rounded-xl text-xs font-bold cursor-pointer"
+            className="btn-primary px-4 py-2 rounded-xl text-xs font-extrabold cursor-pointer"
           >
             + Add First Prescription
           </button>
@@ -142,15 +153,24 @@ export const Medications: React.FC<MedicationsProps> = ({ userId }) => {
               <div key={med.id} className="glass-panel glass-panel-hover p-5 space-y-3">
                 <div className="flex items-start justify-between">
                   <div>
-                    <h3 className="font-bold text-white text-base">{med.name}</h3>
-                    <p className="text-xs" style={{ color: '#64748B' }}>{med.dosage} • {med.frequency}</p>
+                    <h3 className="font-extrabold text-base">{med.name}</h3>
+                    <p className="text-xs font-medium mt-0.5" style={{ color: '#64748B' }}>{med.dosage} • {med.frequency}</p>
                   </div>
-                  <span className="px-2.5 py-1 rounded-full text-[10px] font-bold badge-mint">Active</span>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold badge-mint">Active</span>
+                    <button
+                      onClick={() => handleDeleteMedication(med.id, med.name)}
+                      className="p-1.5 rounded-xl transition-all cursor-pointer text-red-500 hover:bg-red-500/15"
+                      title="Delete Prescription"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-2 text-xs pt-2" style={{ borderTop: '1px solid rgba(14,165,233,0.08)', color: '#94A3B8' }}>
-                  <Clock className="w-4 h-4" style={{ color: '#0EA5E9' }} />
-                  <span>Slots:</span>
+                <div className="flex items-center gap-2 text-xs pt-2" style={{ borderTop: '1px solid var(--border-color)' }}>
+                  <Clock className="w-4 h-4 text-sky-500 shrink-0" />
+                  <span className="font-semibold" style={{ color: '#64748B' }}>Slots:</span>
                   <div className="flex flex-wrap gap-2">
                     {slots.map((s: string, idx: number) => {
                       const isTaken = takenStatus[`${med.id}_${s}`];
@@ -159,11 +179,11 @@ export const Medications: React.FC<MedicationsProps> = ({ userId }) => {
                           key={idx}
                           type="button"
                           onClick={() => handleMarkTaken(med.id, s, med.name)}
-                          className="px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
+                          className="px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer hover:scale-105"
                           style={{
-                            background: isTaken ? 'rgba(6,214,160,0.2)' : 'rgba(15,23,42,0.7)',
-                            border: `1px solid ${isTaken ? '#06D6A0' : 'rgba(14,165,233,0.15)'}`,
-                            color: isTaken ? '#06D6A0' : '#E2E8F0',
+                            background: isTaken ? 'rgba(6,214,160,0.18)' : 'var(--bg-card)',
+                            border: `1px solid ${isTaken ? '#06D6A0' : 'var(--border-color)'}`,
+                            color: isTaken ? '#06D6A0' : 'inherit',
                           }}
                         >
                           <Check className="w-3.5 h-3.5" style={{ color: isTaken ? '#06D6A0' : '#64748B' }} />
@@ -176,7 +196,7 @@ export const Medications: React.FC<MedicationsProps> = ({ userId }) => {
                 </div>
 
                 {med.notes && (
-                  <p className="text-[11px] p-2 rounded-lg italic" style={{ background: 'rgba(15,23,42,0.5)', color: '#64748B' }}>
+                  <p className="text-[11px] p-2 rounded-lg italic font-medium" style={{ background: 'rgba(14,165,233,0.06)', border: '1px solid rgba(14,165,233,0.12)', color: '#64748B' }}>
                     Note: {med.notes}
                   </p>
                 )}

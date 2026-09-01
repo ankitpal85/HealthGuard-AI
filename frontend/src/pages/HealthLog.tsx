@@ -81,12 +81,12 @@ export const HealthLog: React.FC<HealthLogProps> = ({ userId }) => {
         </div>
       )}
 
-      <div className="flex items-center justify-between glass-panel p-6 rounded-2xl" style={{ border: '1px solid rgba(14,165,233,0.1)' }}>
+      <div className="flex items-center justify-between glass-panel p-6 rounded-2xl" style={{ border: '1px solid var(--border-color)' }}>
         <div>
-          <h2 className="text-xl font-extrabold text-white flex items-center gap-2" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-            <Activity className="w-6 h-6" style={{ color: '#0EA5E9' }} /> Health Vitals & Fitness Logger
+          <h2 className="text-xl font-extrabold flex items-center gap-2" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+            <Activity className="w-6 h-6 text-sky-500" /> Health Vitals & Fitness Logger
           </h2>
-          <p className="text-xs mt-1" style={{ color: '#64748B' }}>Track continuous health metrics, heart rate, blood pressure, and sleep history</p>
+          <p className="text-xs font-semibold mt-1" style={{ color: '#64748B' }}>Track continuous health metrics, heart rate, blood pressure, and sleep history</p>
         </div>
       </div>
 
@@ -105,11 +105,11 @@ export const HealthLog: React.FC<HealthLogProps> = ({ userId }) => {
             <button
               key={m.id}
               onClick={() => { setMetricType(m.id); setNewValue(''); setNewValue2(''); }}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs transition-all cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs transition-all cursor-pointer hover:scale-105"
               style={{
-                background: isActive ? `${m.color}15` : 'rgba(15,23,42,0.6)',
-                color: isActive ? m.color : '#94A3B8',
-                border: isActive ? `1px solid ${m.color}40` : '1px solid transparent',
+                background: isActive ? `${m.color}20` : 'var(--bg-card)',
+                color: isActive ? m.color : '#64748B',
+                border: isActive ? `1px solid ${m.color}50` : '1px solid var(--border-color)',
               }}
             >
               <Icon className="w-4 h-4" /> {m.label}
@@ -121,13 +121,13 @@ export const HealthLog: React.FC<HealthLogProps> = ({ userId }) => {
       {/* Log Input & Chart Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 glass-panel p-6 space-y-4">
-          <h3 className="font-bold text-white text-sm" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Visual Telemetry Trend — {metricType.replace('_', ' ').toUpperCase()}</h3>
+          <h3 className="font-extrabold text-sm" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Visual Telemetry Trend — {metricType.replace('_', ' ').toUpperCase()}</h3>
           <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData.length > 0 ? chartData : [{ time: 'Mon', val: 72 }, { time: 'Tue', val: 74 }, { time: 'Wed', val: 70 }, { time: 'Thu', val: 73 }]}>
-                <XAxis dataKey="time" stroke="#475569" fontSize={11} tickLine={false} axisLine={false} />
-                <YAxis stroke="#475569" fontSize={11} tickLine={false} axisLine={false} />
-                <Tooltip contentStyle={{ backgroundColor: '#0F172A', borderColor: activeColor, borderRadius: '12px', color: '#F8FAFC', fontSize: '12px', boxShadow: '0 8px 24px rgba(0,0,0,0.4)' }} />
+                <XAxis dataKey="time" stroke="#64748B" fontSize={11} tickLine={false} axisLine={false} />
+                <YAxis stroke="#64748B" fontSize={11} tickLine={false} axisLine={false} />
+                <Tooltip contentStyle={{ backgroundColor: 'var(--bg-surface)', borderColor: activeColor, borderRadius: '12px', fontSize: '12px' }} />
                 <Line type="monotone" dataKey="val" stroke={activeColor} strokeWidth={3} dot={{ r: 4, fill: activeColor }} />
               </LineChart>
             </ResponsiveContainer>
@@ -136,8 +136,8 @@ export const HealthLog: React.FC<HealthLogProps> = ({ userId }) => {
 
         {/* Quick Log Form */}
         <div className="glass-panel p-6 space-y-4">
-          <h3 className="font-bold text-white text-sm flex items-center gap-2" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-            <Plus className="w-4 h-4" style={{ color: '#0EA5E9' }} /> Log {metricType.replace('_', ' ').toUpperCase()}
+          <h3 className="font-extrabold text-sm flex items-center gap-2" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+            <Plus className="w-4 h-4 text-sky-500" /> Log {metricType.replace('_', ' ').toUpperCase()}
           </h3>
 
           {/* Quick Preset Buttons */}

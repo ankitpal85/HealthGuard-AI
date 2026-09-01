@@ -118,26 +118,28 @@ def firebase_sign_up(
 def firebase_sign_in(email: str, password: str) -> Dict[str, Any]:
     """
     Authenticate user via Firebase Auth REST API or local database fallback.
+    Supports login via email or username.
 
     Returns:
         Dict with keys: 'success', 'user_id', 'email', 'name', 'message', 'provider'
     """
     db = _get_db()
 
-    email_clean = email.strip().lower()
+    email_clean = email.strip()
     if not email_clean or not password:
-        return {"success": False, "message": "Please enter both email and password."}
+        return {"success": False, "message": "Please enter both email/username and password."}
 
     api_key = get_firebase_api_key()
     provider_used = "Local Database"
     id_token = None
     firebase_uid = None
 
-    if api_key and not api_key.startswith("your_"):
+    # Try Firebase Auth if email is formatted and API key is present
+    if api_key and not api_key.startswith("your_") and "@" in email_clean:
         try:
             url = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={api_key}"
             payload = {
-                "email": email_clean,
+                "email": email_clean.lower(),
                 "password": password,
                 "returnSecureToken": True
             }
@@ -149,11 +151,11 @@ def firebase_sign_in(email: str, password: str) -> Dict[str, Any]:
                 id_token = res_data.get("idToken")
                 provider_used = "Firebase Cloud Auth"
 
-                local_user = db.get_user_by_email(email_clean)
+                local_user = db.get_user_by_email(email_clean.lower())
                 if not local_user:
                     user_id = db.create_user(
                         name=email_clean.split("@")[0].title(),
-                        email=email_clean,
+                        email=email_clean.lower(),
                         password_hash=hash_password(password),
                         firebase_uid=firebase_uid
                     )
@@ -172,15 +174,20 @@ def firebase_sign_in(email: str, password: str) -> Dict[str, Any]:
         except Exception:
             pass  # Fallback to local authentication
 
-    # Local SQLite Authentication fallback
+    # Local SQLite Authentication fallback (supports email or username)
     pwd_hash = hash_password(password)
     local_user = db.authenticate_user_db(email_clean, pwd_hash)
 
     if not local_user:
-        legacy_user = db.get_user_by_email(email_clean)
+        # Check if user exists by email or name without a password hash yet (legacy/demo profile)
+        legacy_user = db.get_user_by_email_or_name(email_clean)
         if legacy_user:
-            db.update_user(legacy_user["id"], password_hash=pwd_hash)
-            local_user = legacy_user
+            # If user has no password set, set their password now and log them in
+            if not legacy_user.get("password_hash"):
+                db.update_user(legacy_user["id"], password_hash=pwd_hash)
+                local_user = db.get_user(legacy_user["id"])
+            elif legacy_user.get("password_hash") == pwd_hash:
+                local_user = legacy_user
 
     if local_user:
         return {
@@ -189,7 +196,7 @@ def firebase_sign_in(email: str, password: str) -> Dict[str, Any]:
             "email": local_user.get("email", email_clean),
             "name": local_user.get("name", "User"),
             "provider": provider_used,
-            "message": "Logged in successfully!"
+            "message": f"Welcome back, {local_user.get('name', 'User')}! Logged in successfully."
         }
     else:
-        return {"success": False, "message": "Invalid email or password. Please try again."}
+        return {"success": False, "message": "Invalid credentials. Please check your email/username and password."}

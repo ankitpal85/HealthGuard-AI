@@ -46,7 +46,8 @@ from tools.medical_research_tool import search_pubmed_research
 from tools.vision_voice_tool import analyze_medical_image_tool, process_voice_query_tool
 
 
-# ── LLM setup ────────────────────────────────────────────────────────────────
+# ── LLM setup (Round-Robin Dual-Key with Caching) ────────────────────────────
+import threading
 
 def _is_valid_key(key: str, provider: str) -> bool:
     if not key or not isinstance(key, str):
@@ -58,81 +59,160 @@ def _is_valid_key(key: str, provider: str) -> bool:
         return k.startswith("sk-")
     return len(k) >= 8
 
+
+class _LLMPool:
+    """Round-robin LLM pool for distributing requests across multiple API keys.
+    - Caches validated LLM instances (no re-init per request).
+    - Alternates between KEY1 and KEY2 to halve per-key rate-limit pressure.
+    - Falls back to the other key automatically on errors.
+    """
+
+    def __init__(self):
+        self._lock = threading.Lock()
+        self._pool: list = []          # list of validated LLM instances
+        self._counter = 0              # round-robin index
+        self._initialized = False
+        self._init_error: Optional[str] = None
+
+    def _build_pool(self):
+        """One-time initialization: discover keys, validate models, cache LLMs."""
+        if self._initialized:
+            return
+
+        with self._lock:
+            if self._initialized:
+                return
+
+            provider = os.getenv("LLM_PROVIDER", "gemini").lower()
+            google_key = os.getenv("GOOGLE_API_KEY", "").strip()
+            google_key2 = os.getenv("GOOGLE_API_KEY2", "").strip()
+            openai_key = os.getenv("OPENAI_API_KEY", "").strip()
+
+            valid_google = _is_valid_key(google_key, "gemini")
+            valid_google2 = _is_valid_key(google_key2, "gemini")
+            valid_openai = _is_valid_key(openai_key, "openai")
+
+            if provider == "gemini" and not valid_google and not valid_google2 and valid_openai:
+                provider = "openai"
+
+            # Build ordered list of (provider, api_key, label) attempts
+            # KEY2 is promoted to PRIMARY position for faster / less rate-limited responses
+            attempts = []
+            if provider == "gemini":
+                if valid_google2:
+                    attempts.append(("gemini", google_key2, "PRIMARY (KEY2)"))
+                if valid_google:
+                    attempts.append(("gemini", google_key, "SECONDARY (KEY1)"))
+                if valid_openai:
+                    attempts.append(("openai", openai_key, "OPENAI"))
+            else:
+                if valid_openai:
+                    attempts.append(("openai", openai_key, "OPENAI"))
+                if valid_google2:
+                    attempts.append(("gemini", google_key2, "PRIMARY (KEY2)"))
+                if valid_google:
+                    attempts.append(("gemini", google_key, "SECONDARY (KEY1)"))
+
+            last_exc = None
+            for p, api_key, label in attempts:
+                if p == "gemini":
+                    try:
+                        from langchain_google_genai import ChatGoogleGenerativeAI
+                        preferred_models = [
+                            "models/gemini-3.6-flash",
+                            "models/gemini-3.5-flash",
+                            "models/gemini-flash-latest",
+                            "models/gemini-pro-latest",
+                            "gemini-2.5-flash",
+                            "gemini-1.5-flash",
+                        ]
+                        for model_name in preferred_models:
+                            try:
+                                llm = ChatGoogleGenerativeAI(
+                                    model=model_name,
+                                    google_api_key=api_key,
+                                    temperature=0.3,
+                                    max_retries=2,
+                                    streaming=True,   # Enable true token-level streaming
+                                )
+                                # Warm-up test — only happens ONCE at startup
+                                llm.invoke("hi")
+                                print(f"[OK] Pool: Initialized Gemini model '{model_name}' using {label} API key")
+                                self._pool.append(llm)
+                                break  # one working model per key is enough
+                            except Exception as model_ex:
+                                print(f"[WARN] Pool: Gemini model {model_name} ({label}) failed: {str(model_ex)[:100]}")
+                                last_exc = model_ex
+                                continue
+                    except Exception as ex:
+                        print(f"[WARN] Pool: Google Generative AI import/setup failed: {str(ex)[:100]}")
+                        last_exc = ex
+
+                elif p == "openai":
+                    try:
+                        from langchain_openai import ChatOpenAI
+                        preferred_openai = ["gpt-4o-mini", "gpt-3.5-turbo"]
+                        for model_name in preferred_openai:
+                            try:
+                                llm = ChatOpenAI(
+                                    model=model_name,
+                                    openai_api_key=api_key,
+                                    temperature=0.3,
+                                    max_retries=2,
+                                )
+                                print(f"[OK] Pool: Initialized OpenAI model '{model_name}'")
+                                self._pool.append(llm)
+                                break
+                            except Exception as oai_ex:
+                                print(f"[WARN] Pool: OpenAI model {model_name} failed: {str(oai_ex)[:100]}")
+                                last_exc = oai_ex
+                                continue
+                    except Exception as ex:
+                        print(f"[WARN] Pool: OpenAI setup failed: {str(ex)[:100]}")
+                        last_exc = ex
+
+            self._initialized = True
+
+            if self._pool:
+                print(f"[OK] LLM Pool ready with {len(self._pool)} instance(s) — round-robin enabled")
+            else:
+                self._init_error = str(last_exc) if last_exc else "No valid API keys configured"
+                print(f"[WARN] LLM Pool: All providers failed. Reason: {self._init_error[:150]}")
+
+    def get_llm(self):
+        """Return the next LLM from the round-robin pool. Raises if pool is empty."""
+        self._build_pool()
+
+        if not self._pool:
+            raise ValueError(
+                f"No working LLM available. {self._init_error or 'Neither GOOGLE_API_KEY, GOOGLE_API_KEY2, nor OPENAI_API_KEY is configured.'}"
+            )
+
+        # Thread-safe round-robin selection
+        with self._lock:
+            idx = self._counter % len(self._pool)
+            self._counter += 1
+        return self._pool[idx]
+
+    def reset(self):
+        """Force re-initialization (useful when user updates API keys at runtime)."""
+        with self._lock:
+            self._pool.clear()
+            self._counter = 0
+            self._initialized = False
+            self._init_error = None
+
+
+# Global singleton pool
+_llm_pool = _LLMPool()
+
+
 def _get_llm():
-    """Return the configured LLM with automatic multi-provider (Gemini <-> OpenAI) fallback."""
-    provider = os.getenv("LLM_PROVIDER", "gemini").lower()
-    google_key = os.getenv("GOOGLE_API_KEY", "").strip()
-    openai_key = os.getenv("OPENAI_API_KEY", "").strip()
-
-    valid_google = _is_valid_key(google_key, "gemini")
-    valid_openai = _is_valid_key(openai_key, "openai")
-
-    if provider == "gemini" and not valid_google and valid_openai:
-        provider = "openai"
-
-    providers = [provider]
-    if provider == "gemini" and valid_openai:
-        providers.append("openai")
-    elif provider == "openai" and valid_google:
-        providers.append("gemini")
-
-    last_exc = None
-    for p in providers:
-        if p == "gemini" and valid_google:
-            try:
-                from langchain_google_genai import ChatGoogleGenerativeAI
-                preferred_models = [
-                    "models/gemini-3.6-flash",
-                    "models/gemini-3.5-flash",
-                    "models/gemini-flash-latest",
-                    "models/gemini-pro-latest",
-                    "gemini-2.5-flash",
-                    "gemini-1.5-flash",
-                ]
-                for model_name in preferred_models:
-                    try:
-                        llm = ChatGoogleGenerativeAI(
-                            model=model_name,
-                            google_api_key=google_key,
-                            temperature=0.3,
-                            max_retries=1,
-                        )
-                        llm.invoke("hi")
-                        print(f"[OK] Initialized Gemini LLM model: {model_name}")
-                        return llm
-                    except Exception as model_ex:
-                        print(f"[WARN] Gemini model {model_name} failed: {str(model_ex)[:100]}")
-                        last_exc = model_ex
-                        continue
-            except Exception as ex:
-                print(f"[WARN] Google Generative AI import/setup failed: {str(ex)[:100]}")
-                last_exc = ex
-        elif p == "openai" and valid_openai:
-            try:
-                from langchain_openai import ChatOpenAI
-                preferred_openai = ["gpt-4o-mini", "gpt-3.5-turbo"]
-                for model_name in preferred_openai:
-                    try:
-                        llm = ChatOpenAI(
-                            model=model_name,
-                            openai_api_key=openai_key,
-                            temperature=0.3,
-                            max_retries=1,
-                        )
-                        print(f"[OK] Initialized OpenAI LLM model: {model_name}")
-                        return llm
-                    except Exception as oai_ex:
-                        print(f"[WARN] OpenAI model {model_name} failed: {str(oai_ex)[:100]}")
-                        last_exc = oai_ex
-                        continue
-            except Exception as ex:
-                print(f"[WARN] OpenAI setup failed: {str(ex)[:100]}")
-                last_exc = ex
-
-    if last_exc:
-        print(f"[WARN] Both LLM providers failed. Falling back to Smart Engine. Reason: {str(last_exc)[:150]}")
-        raise last_exc
-    raise ValueError("Neither valid GOOGLE_API_KEY nor OPENAI_API_KEY is configured.")
+    """Return the next LLM instance from the round-robin pool.
+    - First call: validates keys, builds pool (one-time warm-up).
+    - Subsequent calls: instant round-robin selection, zero overhead.
+    """
+    return _llm_pool.get_llm()
 
 
 
@@ -350,6 +430,78 @@ def chat_with_agent(
     except Exception as e:
         print(f"⚠️ chat_with_agent error: {e}")
         return get_smart_health_response(user_message)
+
+
+async def stream_chat_with_agent(user_message: str, chat_history: list = None):
+    """
+    Async generator that yields real LLM tokens as they arrive for true SSE streaming.
+    Falls back to word-chunked streaming if the LLM doesn't support streaming.
+    """
+    import asyncio
+
+    # Domain gate — refuse non-medical queries instantly
+    if not is_health_query(user_message):
+        yield DOMAIN_RESTRICTION_MSG
+        return
+
+    # Emergency triage — respond immediately without hitting LLM
+    emergency_keywords = [
+        "chest pain", "can't breathe", "cannot breathe", "shortness of breath",
+        "stroke", "unconscious", "severe bleeding", "heart attack", "choking"
+    ]
+    if any(kw in user_message.lower() for kw in emergency_keywords):
+        yield (
+            "🚨 **MEDICAL EMERGENCY DETECTED**\n\n"
+            "Your query indicates symptoms that require **IMMEDIATE MEDICAL ATTENTION**.\n\n"
+            "• Please call **112** (India) or **911** (US) immediately.\n"
+            "• Go to the nearest Emergency Department.\n"
+            "• Do NOT wait for an online response.\n\n"
+            "*(HealthGuard AI Emergency Triage System)*"
+        )
+        return
+
+    try:
+        llm = _get_llm()
+
+        # Build message list
+        messages = []
+        if chat_history:
+            for msg in chat_history[-6:]:
+                if msg["role"] == "user":
+                    messages.append(HumanMessage(content=msg["content"]))
+                else:
+                    messages.append(AIMessage(content=msg["content"]))
+        messages.append(HumanMessage(content=user_message))
+
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", SYSTEM_PROMPT),
+            MessagesPlaceholder(variable_name="messages"),
+        ])
+        chain = prompt | llm
+
+        # True token-level streaming via astream
+        async for chunk in chain.astream({"messages": messages}):
+            token = ""
+            if hasattr(chunk, "content"):
+                if isinstance(chunk.content, str):
+                    token = chunk.content
+                elif isinstance(chunk.content, list):
+                    for part in chunk.content:
+                        if isinstance(part, dict) and "text" in part:
+                            token += part["text"]
+                        elif hasattr(part, "text"):
+                            token += part.text
+            if token:
+                yield token
+
+    except Exception as e:
+        print(f"⚠️ stream_chat_with_agent error: {e}")
+        # Graceful fallback — stream the smart engine response word by word
+        fallback = get_smart_health_response(user_message)
+        words = fallback.split(" ")
+        for i in range(0, len(words), 3):
+            yield " ".join(words[i:i+3]) + " "
+            await asyncio.sleep(0.01)
 
 
 

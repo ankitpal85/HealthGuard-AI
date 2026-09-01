@@ -145,6 +145,18 @@ export const logMedicationTaken = async (logData: any) => {
   }
 };
 
+export const deleteMedication = async (medId: number, userId: number) => {
+  try {
+    const res = await api.delete(`/medications/${medId}`);
+    return res.data;
+  } catch (e) {
+    const localMeds = JSON.parse(localStorage.getItem(`local_meds_${userId}`) || '[]');
+    const updated = localMeds.filter((m: any) => m.id !== medId);
+    localStorage.setItem(`local_meds_${userId}`, JSON.stringify(updated));
+    return { success: true };
+  }
+};
+
 export const fetchVitals = async (userId: number, metricType?: string): Promise<VitalLog[]> => {
   try {
     const url = metricType 
@@ -215,6 +227,19 @@ export const logNutrition = async (nutrData: any) => {
     localLogs.unshift(newLog);
     localStorage.setItem(key, JSON.stringify(localLogs));
     return { success: true, log_id: newLog.id };
+  }
+};
+
+export const deleteNutritionLog = async (logId: number, userId: number) => {
+  try {
+    const res = await api.delete(`/nutrition/${logId}`);
+    return res.data;
+  } catch (e) {
+    const key = `local_nutrition_${userId}`;
+    const localLogs = JSON.parse(localStorage.getItem(key) || '[]');
+    const updated = localLogs.filter((l: any) => l.id !== logId);
+    localStorage.setItem(key, JSON.stringify(updated));
+    return { success: true };
   }
 };
 
@@ -414,9 +439,78 @@ export const downloadDoctorPdfReport = (userId: number) => {
   window.open(`${API_BASE_URL}/reports/download-pdf?user_id=${userId}`, '_blank');
 };
 
+// ── Auth Session Management ──────────────────────────────────────────────────
+
+const AUTH_SESSION_KEY = 'healthguard_auth_session';
+const AUTH_USER_ID_KEY = 'healthguard_active_user_id';
+
+export interface AuthSession {
+  user_id: number;
+  name: string;
+  email: string;
+  provider: string;
+  id_token?: string;
+  firebase_uid?: string;
+  logged_in_at: string;
+}
+
+export const saveAuthSession = (data: Partial<AuthSession> & { user_id: number }): void => {
+  const session: AuthSession = {
+    user_id: data.user_id,
+    name: data.name || 'User',
+    email: data.email || '',
+    provider: data.provider || 'Local Database',
+    id_token: data.id_token,
+    firebase_uid: data.firebase_uid,
+    logged_in_at: new Date().toISOString(),
+  };
+  localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
+  localStorage.setItem(AUTH_USER_ID_KEY, String(session.user_id));
+};
+
+export const getStoredAuthSession = (): AuthSession | null => {
+  try {
+    const raw = localStorage.getItem(AUTH_SESSION_KEY);
+    if (!raw) return null;
+    const session: AuthSession = JSON.parse(raw);
+    if (!session.user_id) return null;
+    return session;
+  } catch {
+    return null;
+  }
+};
+
+export const clearAuthSession = (): void => {
+  localStorage.removeItem(AUTH_SESSION_KEY);
+  localStorage.removeItem(AUTH_USER_ID_KEY);
+};
+
+export const logoutUser = async (): Promise<{ success: boolean; message: string }> => {
+  try {
+    const res = await api.post('/auth/logout');
+    clearAuthSession();
+    return res.data;
+  } catch (e) {
+    // Even if backend call fails, still clear local session
+    clearAuthSession();
+    return { success: true, message: 'Logged out locally' };
+  }
+};
+
 export const loginUser = async (email: string, password: string) => {
   try {
     const res = await api.post('/auth/login', { email, password });
+    // Auto-save auth session on successful login
+    if (res.data.success) {
+      saveAuthSession({
+        user_id: res.data.user_id,
+        name: res.data.name,
+        email: res.data.email,
+        provider: res.data.provider,
+        id_token: res.data.id_token,
+        firebase_uid: res.data.firebase_uid,
+      });
+    }
     return res.data;
   } catch (e: any) {
     throw new Error(e.response?.data?.detail || 'Authentication failed');
@@ -433,6 +527,17 @@ export const registerUser = async (email: string, password: string, name: string
       gender: gender || 'Male',
       blood_group: bloodGroup || 'O+',
     });
+    // Auto-save auth session on successful registration
+    if (res.data.success) {
+      saveAuthSession({
+        user_id: res.data.user_id,
+        name: res.data.name,
+        email: res.data.email,
+        provider: res.data.provider,
+        id_token: res.data.id_token,
+        firebase_uid: res.data.firebase_uid,
+      });
+    }
     return res.data;
   } catch (e: any) {
     throw new Error(e.response?.data?.detail || 'Registration failed');

@@ -13,7 +13,7 @@ import { FamilyCaregiver } from './pages/FamilyCaregiver';
 import { VisionVoice } from './pages/VisionVoice';
 import { AuthPage } from './pages/AuthPage';
 
-import { fetchUsers, fetchMedications } from './services/api';
+import { fetchUsers, fetchMedications, getStoredAuthSession, logoutUser, saveAuthSession, type AuthSession } from './services/api';
 
 
 function playChimeSound() {
@@ -39,15 +39,17 @@ export function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [users, setUsers] = useState<any[]>([]);
 
-  const savedUserId = localStorage.getItem('healthguard_active_user_id');
-  const [currentUserId, setCurrentUserId] = useState<number>(savedUserId ? Number(savedUserId) : 1);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(!!savedUserId);
+  // Restore auth session from localStorage on mount
+  const storedSession = getStoredAuthSession();
+  const [currentUserId, setCurrentUserId] = useState<number>(storedSession?.user_id || 1);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(!!storedSession);
+  const [authSession, setAuthSession] = useState<AuthSession | null>(storedSession);
 
   useEffect(() => {
     fetchUsers()
       .then((res) => {
         setUsers(res);
-        if (res.length > 0 && !savedUserId) {
+        if (res.length > 0 && !storedSession) {
           setCurrentUserId(res[0].id);
         }
       })
@@ -86,17 +88,32 @@ export function App() {
     return () => clearInterval(interval);
   }, [currentUserId, isAuthenticated]);
 
-  const handleLoginSuccess = (newUserId: number) => {
-    localStorage.setItem('healthguard_active_user_id', String(newUserId));
+  const handleLoginSuccess = (newUserId: number, userObj?: any) => {
+    // Save complete auth session
+    saveAuthSession({
+      user_id: newUserId,
+      name: userObj?.name || 'User',
+      email: userObj?.email || '',
+      provider: userObj?.provider || 'Local Database',
+      id_token: userObj?.id_token,
+      firebase_uid: userObj?.firebase_uid,
+    });
+
+    const session = getStoredAuthSession();
+    setAuthSession(session);
     setCurrentUserId(newUserId);
     setIsAuthenticated(true);
     fetchUsers().then((res) => setUsers(res));
     setActiveTab('dashboard');
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('healthguard_active_user_id');
+  const handleLogout = async () => {
+    // Call backend logout API + clear all local auth data
+    await logoutUser();
     setIsAuthenticated(false);
+    setAuthSession(null);
+    setCurrentUserId(1);
+    setActiveTab('dashboard');
   };
 
   if (!isAuthenticated) {
@@ -104,16 +121,12 @@ export function App() {
       <AuthPage
         users={users}
         onLoginSuccess={handleLoginSuccess}
-        onSkipToDashboard={() => {
-          setIsAuthenticated(true);
-          setActiveTab('dashboard');
-        }}
       />
     );
   }
 
   return (
-    <div className="flex min-h-screen bg-dark-900 text-slate-100 font-sans">
+    <div className="flex min-h-screen font-sans transition-colors duration-300">
       {/* Sidebar Navigation */}
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
@@ -123,6 +136,7 @@ export function App() {
           activeTab={activeTab}
           currentUserId={currentUserId}
           users={users}
+          authSession={authSession}
           onSelectUser={(id) => {
             setCurrentUserId(id);
             localStorage.setItem('healthguard_active_user_id', String(id));
@@ -149,4 +163,5 @@ export function App() {
 }
 
 export default App;
+
 
