@@ -13,7 +13,7 @@ interface HeaderProps {
   onLogout?: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ activeTab = 'dashboard', currentUserId = 1, users = [], authSession: _authSession, onSelectUser, onNavigate, onLogout }) => {
+export const Header: React.FC<HeaderProps> = ({ activeTab = 'dashboard', currentUserId = 1, users = [], authSession, onSelectUser, onNavigate, onLogout }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
@@ -53,14 +53,23 @@ export const Header: React.FC<HeaderProps> = ({ activeTab = 'dashboard', current
     setSettingsError('');
     const u = await fetchUserProfile(currentUserId);
     if (u) {
-      setProfileName(u.name || '');
-      setProfileEmail(u.email || '');
+      setProfileName(u.name || authSession?.name || '');
+      setProfileEmail(u.email || authSession?.email || '');
       setProfileAge(u.age || 30);
       setProfileGender(u.gender || 'Male');
       setProfileWeight(u.weight_kg || 70);
       setProfileHeight(u.height_cm || 170);
       setProfileBloodGroup(u.blood_group || 'O+');
       setProfileAllergies(u.allergies || 'None');
+    } else {
+      setProfileName(authSession?.name || '');
+      setProfileEmail(authSession?.email || '');
+      setProfileAge(30);
+      setProfileGender('Male');
+      setProfileWeight(70);
+      setProfileHeight(170);
+      setProfileBloodGroup('O+');
+      setProfileAllergies('None');
     }
   };
 
@@ -226,21 +235,38 @@ export const Header: React.FC<HeaderProps> = ({ activeTab = 'dashboard', current
         </button>
 
 
-        {/* User Selector Dropdown */}
-        {users.length > 0 && onSelectUser && (
-          <select
-            value={currentUserId}
-            onChange={(e) => onSelectUser(Number(e.target.value))}
-            className="px-3 py-2 rounded-xl text-xs font-bold focus:outline-none cursor-pointer"
-            style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
-          >
-            {users.map((u) => (
-              <option key={u.id} value={u.id}>
-                👤 {u.name}
-              </option>
-            ))}
-          </select>
-        )}
+        {/* Active User Badge & Selector */}
+        <div
+          className="flex items-center gap-2 px-3 py-1.5 rounded-xl border shadow-sm transition-colors"
+          style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}
+        >
+          <div className="w-6 h-6 rounded-lg bg-sky-500/15 border border-sky-500/30 text-sky-400 flex items-center justify-center text-xs font-bold shrink-0">
+            <UserIcon className="w-3.5 h-3.5 text-sky-400" />
+          </div>
+
+          {users.length > 1 && onSelectUser ? (
+            <select
+              value={currentUserId}
+              onChange={(e) => onSelectUser(Number(e.target.value))}
+              className="bg-transparent text-xs font-extrabold focus:outline-none cursor-pointer text-slate-200"
+            >
+              {authSession && !users.some((u) => u.id === authSession.user_id) && (
+                <option key={authSession.user_id} value={authSession.user_id} className="bg-slate-900 text-white">
+                  {authSession.name}
+                </option>
+              )}
+              {users.map((u) => (
+                <option key={u.id} value={u.id} className="bg-slate-900 text-white">
+                  {u.name}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <span className="text-xs font-extrabold tracking-tight text-slate-200">
+              {authSession?.name || users.find((u) => u.id === currentUserId)?.name || 'Patient'}
+            </span>
+          )}
+        </div>
 
         {/* Direct Logout Button */}
         {onLogout && (

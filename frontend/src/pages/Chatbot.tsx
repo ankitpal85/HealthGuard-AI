@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { fetchChatHistory, sendChatMessage, clearChatHistory } from '../services/api';
+import { fetchChatHistory, sendChatMessage, clearChatHistory, getBaseApiUrl } from '../services/api';
 import { Send, User, Trash2, Sparkles, Stethoscope, Brain, Loader2, Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
 
 interface ChatbotProps {
@@ -59,12 +59,16 @@ export const Chatbot: React.FC<ChatbotProps> = ({ userId }) => {
     setLoading(true);
 
     try {
-      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const baseUrl = getBaseApiUrl();
       const response = await fetch(`${baseUrl}/api/chat/stream`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: userId, message: text }),
       });
+
+      if (!response.ok) {
+        throw new Error(`Chat API responded with status: ${response.status}`);
+      }
 
       if (!response.body) {
         throw new Error('ReadableStream not supported');
@@ -98,7 +102,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({ userId }) => {
         }
       }
     } catch (err) {
-      console.error(err);
+      console.warn('Chat streaming unavailable, using intelligent clinical engine fallback:', err);
       const res = await sendChatMessage(userId, text);
       setMessages((prev) => {
         const newMsgs = [...prev];
