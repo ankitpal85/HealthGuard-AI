@@ -324,12 +324,64 @@ export const deleteNutritionLog = async (logId: number, userId: number) => {
   }
 };
 
-export const fetchChatHistory = async (userId: number): Promise<ChatMessage[]> => {
+export const getChatStorageKey = (userId: number, email?: string): string => {
+  const session = getStoredAuthSession();
+  const userIdentifier = (email || session?.email || '').toLowerCase().trim();
+  if (userIdentifier) {
+    return `healthguard_chat_history_email_${userIdentifier}`;
+  }
+  return `healthguard_chat_history_uid_${userId || session?.user_id || 1}`;
+};
+
+export const getLocalChatHistory = (userId: number, email?: string): ChatMessage[] => {
+  try {
+    const key = getChatStorageKey(userId, email);
+    const raw = localStorage.getItem(key);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+export const saveLocalChatHistory = (userId: number, messages: ChatMessage[], email?: string): void => {
+  try {
+    const key = getChatStorageKey(userId, email);
+    localStorage.setItem(key, JSON.stringify(messages));
+  } catch (e) {
+    console.warn('Failed to persist local chat history:', e);
+  }
+};
+
+export const clearLocalChatHistory = (userId: number, email?: string): void => {
+  try {
+    const key = getChatStorageKey(userId, email);
+    localStorage.removeItem(key);
+  } catch (e) {
+    console.warn('Failed to clear local chat history:', e);
+  }
+};
+
+export const fetchChatHistory = async (userId: number, email?: string): Promise<ChatMessage[]> => {
+  const localHistory = getLocalChatHistory(userId, email);
   try {
     const res = await api.get(`/chat/history?user_id=${userId}`);
-    return res.data.history || [];
+    const serverHistory: ChatMessage[] = res.data.history || [];
+    if (serverHistory.length > 0) {
+      // Merge unique messages from server and local without duplicate roles and content
+      const merged: ChatMessage[] = [...serverHistory];
+      for (const lm of localHistory) {
+        if (!merged.some((sm) => sm.role === lm.role && sm.content.trim() === lm.content.trim())) {
+          merged.push(lm);
+        }
+      }
+      saveLocalChatHistory(userId, merged, email);
+      return merged;
+    }
+    return localHistory;
   } catch (e) {
-    return [];
+    return localHistory;
   }
 };
 
@@ -523,19 +575,29 @@ export const getOfflineClinicalResponse = (query: string): string => {
     `• **Physician Consultation**: For definitive diagnosis or prescription changes, always consult your physician.`;
 };
 
-export const sendChatMessage = async (userId: number, message: string): Promise<ChatMessage> => {
+export const sendChatMessage = async (userId: number, message: string, email?: string): Promise<ChatMessage> => {
   try {
     const res = await api.post('/chat', { user_id: userId, message });
-    return res.data;
+    const reply: ChatMessage = res.data;
+    const current = getLocalChatHistory(userId, email);
+    // Persist if not already present
+    if (!current.some((m) => m.role === 'assistant' && m.content === reply.content)) {
+      saveLocalChatHistory(userId, [...current, reply], email);
+    }
+    return reply;
   } catch (e) {
-    return {
+    const fallbackReply: ChatMessage = {
       role: 'assistant',
       content: getOfflineClinicalResponse(message),
     };
+    const current = getLocalChatHistory(userId, email);
+    saveLocalChatHistory(userId, [...current, fallbackReply], email);
+    return fallbackReply;
   }
 };
 
-export const clearChatHistory = async (userId: number) => {
+export const clearChatHistory = async (userId: number, email?: string) => {
+  clearLocalChatHistory(userId, email);
   try {
     const res = await api.delete(`/chat/history?user_id=${userId}`);
     return res.data;

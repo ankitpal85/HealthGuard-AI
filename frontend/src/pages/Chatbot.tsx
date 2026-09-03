@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { fetchChatHistory, sendChatMessage, clearChatHistory, getBaseApiUrl } from '../services/api';
+import { fetchChatHistory, sendChatMessage, clearChatHistory, getBaseApiUrl, saveLocalChatHistory, getStoredAuthSession } from '../services/api';
 import { Send, User, Trash2, Sparkles, Stethoscope, Brain, Loader2, Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
 
 interface ChatbotProps {
@@ -28,7 +28,8 @@ export const Chatbot: React.FC<ChatbotProps> = ({ userId }) => {
   };
 
   useEffect(() => {
-    fetchChatHistory(userId)
+    const session = getStoredAuthSession();
+    fetchChatHistory(userId, session?.email)
       .then((res) => {
         if (res.length === 0) {
           setMessages([
@@ -53,8 +54,15 @@ export const Chatbot: React.FC<ChatbotProps> = ({ userId }) => {
     const text = textToSend || input;
     if (!text.trim() || loading) return;
 
-    const userMsg = { role: 'user', content: text };
-    setMessages((prev) => [...prev, userMsg]);
+    const session = getStoredAuthSession();
+    const userEmail = session?.email;
+
+    const userMsg = { role: 'user', content: text, created_at: new Date().toISOString() };
+    setMessages((prev) => {
+      const updated = [...prev, userMsg];
+      saveLocalChatHistory(userId, updated, userEmail);
+      return updated;
+    });
     if (!textToSend) setInput('');
     setLoading(true);
 
@@ -96,6 +104,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({ userId }) => {
             setMessages((prev) => {
               const newMsgs = [...prev];
               newMsgs[newMsgs.length - 1] = { role: 'assistant', content: assistantText };
+              saveLocalChatHistory(userId, newMsgs, userEmail);
               return newMsgs;
             });
           }
@@ -103,14 +112,17 @@ export const Chatbot: React.FC<ChatbotProps> = ({ userId }) => {
       }
     } catch (err) {
       console.warn('Chat streaming unavailable, using intelligent clinical engine fallback:', err);
-      const res = await sendChatMessage(userId, text);
+      const res = await sendChatMessage(userId, text, userEmail);
       setMessages((prev) => {
         const newMsgs = [...prev];
         if (newMsgs.length > 0 && newMsgs[newMsgs.length - 1].role === 'assistant' && !newMsgs[newMsgs.length - 1].content) {
           newMsgs[newMsgs.length - 1] = res;
+          saveLocalChatHistory(userId, newMsgs, userEmail);
           return newMsgs;
         }
-        return [...prev, res];
+        const updated = [...prev, res];
+        saveLocalChatHistory(userId, updated, userEmail);
+        return updated;
       });
     } finally {
       setLoading(false);
@@ -169,13 +181,16 @@ export const Chatbot: React.FC<ChatbotProps> = ({ userId }) => {
 
   const handleClear = async () => {
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-    await clearChatHistory(userId);
-    setMessages([
+    const session = getStoredAuthSession();
+    await clearChatHistory(userId, session?.email);
+    const initialMsg: any[] = [
       {
         role: 'assistant',
         content: "👋 Chat history cleared. How can I help you today?",
       },
-    ]);
+    ];
+    setMessages(initialMsg);
+    saveLocalChatHistory(userId, initialMsg, session?.email);
   };
 
   const [continuousVoice, setContinuousVoice] = useState(false);
