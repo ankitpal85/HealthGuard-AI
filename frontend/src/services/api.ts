@@ -904,6 +904,13 @@ export const updateUserProfile = async (userId: number, profileData: any) => {
   }
 };
 
+export const fetchHealthInsights = async (userId: number) => {
+  const res = await api.get('/health-insights', {
+    params: { user_id: userId }
+  });
+  return res.data;
+};
+
 
 
 
