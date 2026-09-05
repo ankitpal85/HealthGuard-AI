@@ -426,7 +426,18 @@ export function App() {
 
 
         {/* Header */}
-        <Header />
+        <Header
+          activeTab={activeTab}
+          currentUserId={currentUserId}
+          users={users}
+          authSession={authSession}
+          onSelectUser={(id) => {
+            setCurrentUserId(id);
+            localStorage.setItem('healthguard_active_user_id', String(id));
+          }}
+          onNavigate={(tab) => setActiveTab(tab)}
+          onLogout={handleLogout}
+        />
 
 
         {/* Page Content */}

@@ -6,7 +6,13 @@ echo ===================================================
 echo   Starting HealthGuard AI (Backend + Frontend)
 echo ===================================================
 
-start "HealthGuard AI - FastAPI Backend" cmd /k "cd /d "%~dp0" && python -m uvicorn backend.main:app --port 8000 --reload"
+if exist "%~dp0venv\Scripts\python.exe" (
+    set "PY_CMD=%~dp0venv\Scripts\python.exe"
+) else (
+    set "PY_CMD=python"
+)
+
+start "HealthGuard AI - FastAPI Backend" cmd /k "cd /d "%~dp0" && "%PY_CMD%" -m uvicorn backend.main:app --port 8000 --reload"
 
 timeout /t 3 /nobreak >nul
 
