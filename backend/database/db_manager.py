@@ -263,11 +263,24 @@ def init_db():
             protein_g   REAL DEFAULT 0,
             carbs_g     REAL DEFAULT 0,
             fats_g      REAL DEFAULT 0,
+            fat_g       REAL DEFAULT 0,
             water_ml    REAL DEFAULT 0,
             date_str    TEXT DEFAULT (date('now')),
+            recorded_at TEXT DEFAULT (datetime('now')),
             created_at  TEXT DEFAULT (datetime('now'))
         )
     """)
+
+    # Schema compatibility migrations
+    cursor.execute("PRAGMA table_info(nutrition_logs)")
+    existing_cols = [c[1] for c in cursor.fetchall()]
+    if "recorded_at" not in existing_cols:
+        cursor.execute("ALTER TABLE nutrition_logs ADD COLUMN recorded_at TEXT")
+        cursor.execute("UPDATE nutrition_logs SET recorded_at = created_at WHERE recorded_at IS NULL")
+    if "fat_g" not in existing_cols:
+        cursor.execute("ALTER TABLE nutrition_logs ADD COLUMN fat_g REAL DEFAULT 0")
+        cursor.execute("UPDATE nutrition_logs SET fat_g = fats_g WHERE fat_g IS NULL")
+
 
     conn.commit()
 
@@ -622,14 +635,15 @@ def clear_chat_history(user_id: int) -> bool:
 def log_nutrition(user_id: int, meal_type: str, calories: float,
                   protein_g: float = None, carbs_g: float = None,
                   fat_g: float = None, food_items: str = None,
-                  recorded_at: str = None) -> int:
-    recorded_at = recorded_at or datetime.now().strftime("%Y-%m-%d %H:%M")
+                  recorded_at: str = None, water_ml: float = 0.0) -> int:
+    rec_time = recorded_at or datetime.now().strftime("%Y-%m-%d %H:%M")
+    date_val = datetime.now().strftime("%Y-%m-%d")
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        INSERT INTO nutrition_logs (user_id, meal_type, calories, protein_g, carbs_g, fat_g, food_items, recorded_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    """, (user_id, meal_type, calories, protein_g, carbs_g, fat_g, food_items, recorded_at))
+        INSERT INTO nutrition_logs (user_id, meal_type, food_items, calories, protein_g, carbs_g, fats_g, fat_g, water_ml, date_str, recorded_at, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (user_id, meal_type, food_items or "", calories or 0, protein_g or 0, carbs_g or 0, fat_g or 0, fat_g or 0, water_ml or 0, date_val, rec_time, rec_time))
     log_id = cursor.lastrowid
     conn.commit()
     conn.close()
